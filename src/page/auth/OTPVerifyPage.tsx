@@ -30,6 +30,7 @@ function OTPVerifyPage() {
     if (isSuccess) {
       dispatch(openSnackbar({ message: data?.message }));
       dispatch(login(data));
+
       navigate('/');
     }
     if (isError && error && 'data' in error) {
