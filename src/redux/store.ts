@@ -2,6 +2,7 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import authReducer from './slice//authSlice';
 import { rootApi } from '@services/rootApi';
 import snackbarReducer from './slice/snackbar';
+import settingsReducer from './slice/settingSlice';
 import {
   FLUSH,
   PAUSE,
@@ -26,6 +27,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   snackbar: snackbarReducer,
+  settings: settingsReducer,
   [rootApi.reducerPath]: rootApi.reducer,
 });
 

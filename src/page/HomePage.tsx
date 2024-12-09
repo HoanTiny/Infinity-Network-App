@@ -1,25 +1,22 @@
-import { Button } from '@mui/material';
 // import { useGetAuthUserQuery } from '@services/rootApi';
 // import { Navigate } from 'react-router-dom';
 
+import FriendRequest from '@components/FriendRequests';
+import PostCreation from '@components/PostCreation';
+import PostList from '@components/PostList';
+import Sidebar from '@components/Sidebar.tsx';
+
 function HomePage() {
-  // const response = useGetAuthUserQuery() as {
-  //   data?: { _id?: string };
-  //   isLoading: boolean;
-  // };
-  // console.log({ response });
-
-  // if (response.isLoading) {
-  //   return <div>Loading...</div>;
-  // }
-
-  // if (!response?.data?._id) {
-  //   <Navigate to={'/login'} />;
-  // }
   return (
-    <div>
-      Home
-      <Button variant="contained">LOGIN</Button>
+    <div className="flex gap-4 p-6 bg-[#eeeeee]">
+      <Sidebar />
+      <div className="flex-1">
+        <PostList />
+        <PostCreation />
+      </div>
+      <div className="w-64">
+        <FriendRequest />
+      </div>
     </div>
   );
 }

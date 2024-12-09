@@ -60,7 +60,7 @@ function Header() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" color="default" className="py-4">
+      <AppBar position="static" color="default" className="">
         <Toolbar className="!min-h-fit justify-between">
           {/* Logo1 */}
           <div className="flex items-center gap-4">
