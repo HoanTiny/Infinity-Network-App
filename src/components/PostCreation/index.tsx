@@ -1,5 +1,19 @@
+import { Avatar, TextField } from '@mui/material';
+import { deepOrange } from '@mui/material/colors';
 function PostCreation() {
-  return <div>PostCreation</div>;
+  return (
+    <div className="flex px-5 py-6 gap-4 w-full justify-between shadow-4xl bg-white items-center text-[#4B465C]">
+      <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>
+      <TextField
+        name="mind"
+        placeholder="What's on your mind?"
+        className="flex-1 rounded-[4px] border-[#DBDADE]"
+        // onClick={() => {
+
+        // }}
+      ></TextField>
+    </div>
+  );
 }
 
 export default PostCreation;

@@ -10,11 +10,14 @@ export const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
-    openSetting: (state) => {
+    toggleDrawer: (state) => {
       state.IsShowDrawer = !state.IsShowDrawer;
+    },
+    onpenDrawer: (state) => {
+      state.IsShowDrawer = true;
     },
   },
 });
 
-export const { openSetting } = settingsSlice.actions;
+export const { toggleDrawer, onpenDrawer } = settingsSlice.actions;
 export default settingsSlice.reducer;

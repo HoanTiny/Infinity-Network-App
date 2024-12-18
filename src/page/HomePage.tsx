@@ -11,8 +11,8 @@ function HomePage() {
     <div className="flex gap-4 p-6 bg-[#eeeeee]">
       <Sidebar />
       <div className="flex-1">
-        <PostList />
         <PostCreation />
+        <PostList />
       </div>
       <div className="w-64">
         <FriendRequest />
