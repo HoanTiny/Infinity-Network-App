@@ -1,6 +1,10 @@
 import { Avatar, TextField } from '@mui/material';
 import { deepOrange } from '@mui/material/colors';
+import { openDialog } from '@redux/slice/dialogSlice';
+import { useDispatch } from 'react-redux';
 function PostCreation() {
+  const dispatch = useDispatch();
+
   return (
     <div className="flex px-5 py-6 gap-4 w-full justify-between shadow-4xl bg-white items-center text-[#4B465C]">
       <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>
@@ -8,9 +12,10 @@ function PostCreation() {
         name="mind"
         placeholder="What's on your mind?"
         className="flex-1 rounded-[4px] border-[#DBDADE]"
-        // onClick={() => {
-
-        // }}
+        onClick={() => {
+          console.log('Clicked on');
+          dispatch(openDialog());
+        }}
       ></TextField>
     </div>
   );

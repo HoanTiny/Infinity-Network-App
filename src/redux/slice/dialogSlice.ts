@@ -6,18 +6,18 @@ const initialState = {
   open: false,
 };
 
-export const snackbarSlice = createSlice({
-  name: 'snackbar',
+export const dialogSlice = createSlice({
+  name: 'dialog',
   initialState,
   reducers: {
-    openSnackbar: (state) => {
+    openDialog: (state) => {
       state.open = true;
     },
-    closeSnackbar: (state) => {
+    closeDialog: (state) => {
       state.open = false;
     },
   },
 });
 
-export const { openSnackbar, closeSnackbar } = snackbarSlice.actions;
-export default snackbarSlice.reducer;
+export const { openDialog, closeDialog } = dialogSlice.actions;
+export default dialogSlice.reducer;

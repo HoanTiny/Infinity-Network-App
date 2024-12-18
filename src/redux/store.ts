@@ -3,6 +3,7 @@ import authReducer from './slice//authSlice';
 import { rootApi } from '@services/rootApi';
 import snackbarReducer from './slice/snackbar';
 import settingsReducer from './slice/settingSlice';
+import dialogReducer from './slice/dialogSlice';
 import {
   FLUSH,
   PAUSE,
@@ -28,6 +29,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   snackbar: snackbarReducer,
   settings: settingsReducer,
+  dialog: dialogReducer,
   [rootApi.reducerPath]: rootApi.reducer,
 });
 
