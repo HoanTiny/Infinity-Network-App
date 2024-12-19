@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Avatar, TextField } from '@mui/material';
 import { deepOrange } from '@mui/material/colors';
 import { openDialog } from '@redux/slice/dialogSlice';
 import { useDispatch } from 'react-redux';
+
 function PostCreation() {
   const dispatch = useDispatch();
 
@@ -14,7 +16,15 @@ function PostCreation() {
         className="flex-1 rounded-[4px] border-[#DBDADE]"
         onClick={() => {
           console.log('Clicked on');
-          dispatch(openDialog());
+          dispatch(
+            openDialog({
+              title: 'TITLE_CREATE_POST',
+              content: 'NEW_CONTENT_DIALOG',
+              actions: 'Post',
+              maxWidth: 'md',
+              fullWidth: true,
+            })
+          );
         }}
       ></TextField>
     </div>

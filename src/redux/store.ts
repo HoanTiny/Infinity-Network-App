@@ -22,7 +22,7 @@ const persistConfig = {
   key: 'root',
   version: 1,
   storage,
-  blacklist: [rootApi.reducerPath],
+  blacklist: [rootApi.reducerPath, 'dialog', 'settings'],
 };
 
 const rootReducer = combineReducers({

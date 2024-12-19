@@ -4,17 +4,22 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   open: false,
+  title: null,
+  content: null,
+  actions: null,
+  maxWidth: 'xs',
+  fullWidth: true,
 };
 
 export const dialogSlice = createSlice({
   name: 'dialog',
   initialState,
   reducers: {
-    openDialog: (state) => {
-      state.open = true;
+    openDialog: (state, action) => {
+      return { ...state, ...action.payload, open: true };
     },
-    closeDialog: (state) => {
-      state.open = false;
+    closeDialog: () => {
+      return initialState;
     },
   },
 });
