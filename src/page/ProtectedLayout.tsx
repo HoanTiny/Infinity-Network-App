@@ -1,4 +1,5 @@
 import Header from '@components/Header';
+import Loading from '@components/Loading';
 import { saveUserinfo } from '@redux/slice/authSlice';
 import { useGetAuthUserQuery } from '@services/rootApi';
 import { useEffect } from 'react';
@@ -27,7 +28,7 @@ function Protectedlayout() {
   // }
 
   if (response.isLoading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
   return (
     <>

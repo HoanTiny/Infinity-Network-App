@@ -17,6 +17,8 @@
     "@mui/icons-material": "^6.1.4",
     "@mui/material": "^6.1.4",
     "@reduxjs/toolkit": "^2.3.0",
+    "dayjs": "^1.11.13",
+    "framer-motion": "^11.15.0",
     "lodash": "^4.17.21",
     "mui-one-time-password-input": "^2.0.3",
     "react": "19.0.0-rc-77b637d6-20241016",

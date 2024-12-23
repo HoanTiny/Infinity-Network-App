@@ -25,6 +25,7 @@
 
 // export const { useRegisterMutation } = rootApi;
 
+import { PostProps } from '@components/PostList/Post';
 import { login, logOut } from '@redux/slice/authSlice';
 // import { persistor } from '@redux/store';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -89,6 +90,7 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
 export const rootApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryForceLogout,
+  tagTypes: ['POSTS'],
   endpoints: (builder) => ({
     register: builder.mutation({
       query: ({ fullName, email, password }) => ({
@@ -136,10 +138,17 @@ export const rootApi = createApi({
         method: 'POST',
         body: formData,
       }),
+
+      invalidatesTags: ['POSTS'],
     }),
     getAuthUser: builder.query<void, void>({
       // <void, void>
       query: () => '/auth-user',
+    }),
+
+    getPosts: builder.query<PostProps[], void>({
+      query: () => '/posts',
+      providesTags: [{ type: 'POSTS' }],
     }),
   }),
 });
@@ -151,4 +160,5 @@ export const {
   useGetAuthUserQuery,
   useCreatePostMutation,
   useRefeshTokenMutation,
+  useGetPostsQuery,
 } = rootApi;

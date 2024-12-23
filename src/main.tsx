@@ -16,6 +16,7 @@ import theme from './configs/muiConfigs.ts';
 import Protectedlayout from '@page/ProtectedLayout.tsx';
 import { PersistGate } from 'redux-persist/integration/react';
 import Dialog from '@components/Dialog/index.tsx';
+import Loading from '@components/Loading/index.tsx';
 
 const router = createBrowserRouter([
   {
@@ -54,7 +55,7 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
+    <PersistGate loading={<Loading />} persistor={persistor}>
       <ThemeProvider theme={theme}>
         {/* <ModalProvider> */}
         <RouterProvider router={router} />

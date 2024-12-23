@@ -25,7 +25,7 @@ function Sidebar() {
           </div>
         )}
 
-        <div className="w-64 bg-[#FFFFFF] shadow-4xl text-xxs rounded-[12px] px-[14px] py-3">
+        <div className="w-64 card text-xxs px-[14px] py-3">
           <Link to="/" className="flex p-3  gap-2">
             <img src="/icons/news.svg" alt="" />
             New Feeds
@@ -44,7 +44,7 @@ function Sidebar() {
           </Link>
         </div>
 
-        <div className="w-64 bg-[#FFFFFF] shadow-4xl text-xxs rounded-[12px]">
+        <div className="w-64 card text-xxs">
           <Typography
             sx={{
               color: '#4B465C',

@@ -8,7 +8,7 @@ function PostCreation() {
   const dispatch = useDispatch();
 
   return (
-    <div className="flex px-5 py-6 gap-4 w-full justify-between shadow-4xl bg-white items-center text-[#4B465C]">
+    <div className="flex gap-4 w-full justify-between card items-center text-[#4B465C]">
       <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>
       <TextField
         name="mind"
