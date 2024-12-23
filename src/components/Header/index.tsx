@@ -1,4 +1,5 @@
 import { useUserInfo } from '@hooks/getUserinfo';
+import { useMediumScreen } from '@hooks/index';
 import { useLogout } from '@hooks/useLogout';
 import { Search } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -14,8 +15,6 @@ import {
   TextField,
   //   TextField,
   Toolbar,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import { onpenDrawer } from '@redux/slice/settingSlice';
 import React from 'react';
@@ -23,8 +22,8 @@ import { useDispatch } from 'react-redux';
 function Header() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const mediumScreen = useMediumScreen();
+  console.log('mediumScreen', mediumScreen);
   // Dispatch
   const dispatch = useDispatch();
   const isMenuOpen = Boolean(anchorEl);
@@ -73,7 +72,7 @@ function Header() {
         <Toolbar className="!min-h-fit justify-between">
           {/* Logo1 */}
           <div className="flex items-center gap-4">
-            {isMobile ? (
+            {mediumScreen ? (
               <IconButton
                 size="small"
                 edge="start"
@@ -112,7 +111,7 @@ function Header() {
           </div>
 
           <div>
-            {isMobile && (
+            {mediumScreen && (
               <IconButton>
                 <Search />
               </IconButton>

@@ -5,8 +5,10 @@ import FriendRequest from '@components/FriendRequests';
 import PostCreation from '@components/PostCreation';
 import PostList from '@components/PostList';
 import Sidebar from '@components/Sidebar.tsx';
+import { useMediumScreen } from '@hooks/index';
 
 function HomePage() {
+  const mediumScreen = useMediumScreen();
   return (
     <div className="flex gap-4 p-6 bg-[#eeeeee]">
       <Sidebar />
@@ -14,9 +16,11 @@ function HomePage() {
         <PostCreation />
         <PostList />
       </div>
-      <div className="w-64">
-        <FriendRequest />
-      </div>
+      {!mediumScreen && (
+        <div className="w-64">
+          <FriendRequest />
+        </div>
+      )}
     </div>
   );
 }

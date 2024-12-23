@@ -3,7 +3,7 @@ import { saveUserinfo } from '@redux/slice/authSlice';
 import { useGetAuthUserQuery } from '@services/rootApi';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 function Protectedlayout() {
   const dispatch = useDispatch();
@@ -22,9 +22,9 @@ function Protectedlayout() {
     }
   }, [response.isSuccess, response.data, dispatch]);
 
-  if (response.error?.code === 401) {
-    return <Navigate to="/login" />;
-  }
+  // if (response.error?.code === 401) {
+  //   return <Navigate to="/login" />;
+  // }
 
   if (response.isLoading) {
     return <div>Loading...</div>;

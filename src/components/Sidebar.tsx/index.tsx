@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useMediumScreen } from '@hooks/index';
 import { Close } from '@mui/icons-material';
-import {
-  Drawer,
-  IconButton,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
+import { Drawer, IconButton, Typography } from '@mui/material';
 import { toggleDrawer } from '@redux/slice/settingSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -14,16 +9,14 @@ import { Link } from 'react-router-dom';
 function Sidebar() {
   const dispacth = useDispatch();
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const mediumScreen = useMediumScreen();
   const isShowDrawer = useSelector((store: any) => store.settings.IsShowDrawer);
   console.log('store settings: ', isShowDrawer);
-  console.log('isMobile', isMobile);
 
   const SidebarContent = () => {
     return (
       <div className="flex-col flex gap-4 ">
-        {isMobile && (
+        {mediumScreen && (
           <div className="flex justify-between px-[14px] py-2 items-center">
             <img src="/img/Logo2.svg" alt="logo" className="w-8 h-8" />
             <IconButton onClick={() => dispacth(toggleDrawer())}>
@@ -78,7 +71,7 @@ function Sidebar() {
   };
   return (
     <>
-      {isMobile ? (
+      {mediumScreen ? (
         <Drawer
           variant="temporary"
           open={isShowDrawer}

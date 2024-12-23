@@ -1,19 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Avatar, Box, Chip, IconButton, Stack } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  DialogActions,
+  DialogContent,
+  IconButton,
+  Stack,
+} from '@mui/material';
 import { deepOrange } from '@mui/material/colors';
 import PublicIcon from '@mui/icons-material/Public';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Close } from '@mui/icons-material';
+import { useCreatePostMutation } from '@services/rootApi';
+import { useDispatch } from 'react-redux';
+import { closeDialog } from '@redux/slice/dialogSlice';
+import { openSnackbar } from '@redux/slice/snackbar';
 
-function MyDropzone() {
-  const [image, setImage] = useState<any>(null);
-  const onDrop = useCallback((acceptedFiles: any) => {
-    // Do something with the files
-    console.log('Accepted files:', acceptedFiles);
-    setImage(acceptedFiles[0]);
-  }, []);
+function ImageUploader({ image, setImage }: { image: any; setImage: any }) {
+  const onDrop = useCallback(
+    (acceptedFiles: any) => {
+      // Do something with the files
+      console.log('Accepted files:', acceptedFiles);
+      setImage(acceptedFiles[0]);
+    },
+    [setImage]
+  );
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
@@ -73,33 +89,77 @@ function MyDropzone() {
   );
 }
 function NewPostDiaLog() {
-  return (
-    <Box className="flex mt-4 flex-col justify-center gap-4">
-      <div className="flex gap-4 ">
-        <Avatar sx={{ bgcolor: deepOrange[500] }}>H</Avatar>
-        <div className="">
-          <span className="text-[16px]">Trần Ngọc Hoàn</span>
-          <div className="flex items-center text-[16px] bg-[#f0f2f5] rounded-lg justify-center">
-            <PublicIcon
-              style={{
-                color: 'rgb(179, 179, 179)',
-                fontSize: '14px',
-              }}
-            />
-            <span className="ml-2 text-[14px]">Public</span>
-            <ArrowDropDownIcon />
-          </div>
-        </div>
-      </div>
-      <textarea
-        placeholder="What's on your mind?"
-        className="w-full pl-4 py-2  focus:outline-none resize-none min-h-10 h-[150px] overflow-hidden"
-      />
+  const [image, setImage] = useState<any>(null);
 
-      <div>
-        <MyDropzone />
-      </div>
-    </Box>
+  const [contentPost, setContentPost] = useState('');
+  const [createPost, { isLoading }] = useCreatePostMutation();
+  const distpatch = useDispatch();
+  const handleCreateNewPost = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('content', contentPost);
+      if (image) {
+        formData.append('image', image);
+      }
+      await createPost(formData).unwrap();
+      distpatch(closeDialog());
+      distpatch(
+        openSnackbar({ message: 'Create post success', type: 'success' })
+      );
+    } catch (error: any) {
+      console.log('Error creating post:', error);
+      distpatch(openSnackbar({ message: error.data.message, type: 'error' }));
+    }
+  };
+
+  const isValid = !!(contentPost || image);
+  console.log('isValid', isValid);
+
+  return (
+    <div>
+      <DialogContent>
+        <Box className="flex mt-4 flex-col justify-center gap-4">
+          <div className="flex gap-4 ">
+            <Avatar sx={{ bgcolor: deepOrange[500] }}>H</Avatar>
+            <div className="">
+              <span className="text-[16px]">Trần Ngọc Hoàn</span>
+              <div className="flex items-center text-[16px] bg-[#f0f2f5] rounded-lg justify-center">
+                <PublicIcon
+                  style={{
+                    color: 'rgb(179, 179, 179)',
+                    fontSize: '14px',
+                  }}
+                />
+                <span className="ml-2 text-[14px]">Public</span>
+                <ArrowDropDownIcon />
+              </div>
+            </div>
+          </div>
+          <textarea
+            placeholder="What's on your mind?"
+            className="w-full pl-4 py-2  focus:outline-none resize-none min-h-10 h-[150px] overflow-hidden"
+            value={contentPost}
+            onChange={(e) => setContentPost(e.target.value)}
+          />
+
+          <div>
+            <ImageUploader image={image} setImage={setImage} />
+          </div>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          className="w-full px-4 py-2 bg-[#3f51b5] text-white rounded-lg hover:bg-[#283593]"
+          type="submit"
+          onClick={handleCreateNewPost}
+          disabled={!isValid}
+          variant="contained"
+        >
+          {isLoading && <CircularProgress size={20} className="mr-2" />}
+          Post
+        </Button>
+      </DialogActions>
+    </div>
   );
 }
 

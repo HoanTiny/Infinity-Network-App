@@ -25,7 +25,7 @@
 
 // export const { useRegisterMutation } = rootApi;
 
-import { logOut } from '@redux/slice/authSlice';
+import { login, logOut } from '@redux/slice/authSlice';
 // import { persistor } from '@redux/store';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
@@ -43,11 +43,45 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
   const result = await baseQuery(args, api, extraOptions);
-  if (result.error?.status === 401) {
-    // dispatch(logout());
-    api.dispatch(logOut());
-    // await persistor.purge();
-    window.location.href = '/login';
+  console.log('Result', result);
+  if (
+    result.error?.status === 401 &&
+    (result.error.data as { message: string })?.message === 'Token has expired.'
+  ) {
+    const refreshToken = (api.getState() as { auth: { refreshToken: string } })
+      .auth.refreshToken;
+
+    console.log('Refreshing token...', refreshToken);
+    if (refreshToken) {
+      const refreshResult = await baseQuery(
+        {
+          url: '/refresh-token',
+          method: 'POST',
+          body: {
+            refreshToken,
+          },
+        },
+        api,
+        extraOptions
+      );
+
+      const newAccessToken = (refreshResult.data as { accessToken: string })
+        ?.accessToken;
+
+      if (newAccessToken) {
+        api.dispatch(
+          login({
+            accessToken: newAccessToken,
+            refreshToken,
+          })
+        );
+
+        return baseQuery(args, api, extraOptions);
+      }
+    } else {
+      api.dispatch(logOut());
+      window.location.href = '/login';
+    }
   }
   return result;
 };
@@ -77,6 +111,15 @@ export const rootApi = createApi({
         },
       }),
     }),
+    refeshToken: builder.mutation({
+      query: (refreshToken) => ({
+        url: 'refresh-token',
+        method: 'POST',
+        body: {
+          refreshToken,
+        },
+      }),
+    }),
     verifyOTP: builder.mutation({
       query: ({ email, otp }) => ({
         url: 'verify-otp',
@@ -85,6 +128,13 @@ export const rootApi = createApi({
           email,
           otp,
         },
+      }),
+    }),
+    createPost: builder.mutation({
+      query: (formData) => ({
+        url: 'posts',
+        method: 'POST',
+        body: formData,
       }),
     }),
     getAuthUser: builder.query<void, void>({
@@ -99,4 +149,6 @@ export const {
   useLoginMutation,
   useVerifyOTPMutation,
   useGetAuthUserQuery,
+  useCreatePostMutation,
+  useRefeshTokenMutation,
 } = rootApi;

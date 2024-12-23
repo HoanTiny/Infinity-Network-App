@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  DialogActions,
-  DialogContent,
   // DialogContent,
   DialogTitle,
   Dialog as MUIDialog,
@@ -41,14 +39,8 @@ function Dialog() {
       <DialogTitle>
         <DynamicContent contentType={dialog.title} />
       </DialogTitle>
-      <DialogContent>
-        <DynamicContent contentType={dialog.content} />
-      </DialogContent>
-      <DialogActions>
-        <button className="w-full px-4 py-2 bg-[#3f51b5] text-white rounded-lg hover:bg-[#283593]">
-          {dialog.actions}
-        </button>
-      </DialogActions>
+
+      <DynamicContent contentType={dialog.content} />
     </MUIDialog>
   );
 }
