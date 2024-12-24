@@ -25,7 +25,7 @@ function ImageUploader({ image, setImage }: { image: any; setImage: any }) {
   const onDrop = useCallback(
     (acceptedFiles: any) => {
       // Do something with the files
-      console.log('Accepted files:', acceptedFiles);
+      // console.log('Accepted files:', acceptedFiles);
       setImage(acceptedFiles[0]);
     },
     [setImage]

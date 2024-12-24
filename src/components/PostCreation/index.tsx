@@ -15,7 +15,6 @@ function PostCreation() {
         placeholder="What's on your mind?"
         className="flex-1 rounded-[4px] border-[#DBDADE]"
         onClick={() => {
-          console.log('Clicked on');
           dispatch(
             openDialog({
               title: 'TITLE_CREATE_POST',

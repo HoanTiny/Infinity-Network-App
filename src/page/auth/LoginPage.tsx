@@ -31,10 +31,10 @@ function LoginPage() {
     useLoginMutation();
 
   function onSubmit(formData: any) {
-    console.log(`data`, { formData });
+    // console.log(`data`, { formData });
     login(formData);
   }
-  console.log(getValues('email'));
+  // console.log(getValues('email'));
   useEffect(() => {
     if (isSuccess) {
       dispatch(openSnackbar({ message: data?.message }));
@@ -51,7 +51,7 @@ function LoginPage() {
       );
     }
   }, [dispatch, isSuccess, isError, error, navigate, data, getValues]);
-  console.log(`data, isLoading`, data, isLoading, errors);
+  // console.log(`data, isLoading`, data, isLoading, errors);
 
   return (
     <div className="flex flex-col gap-6 w-full">

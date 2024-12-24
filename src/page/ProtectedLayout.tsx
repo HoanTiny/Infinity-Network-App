@@ -14,7 +14,7 @@ function Protectedlayout() {
     error?: { code: number };
     isSuccess: boolean;
   };
-  console.log({ response });
+  // console.log({ response });
 
   useEffect(() => {
     if (response.isSuccess) {

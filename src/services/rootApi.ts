@@ -69,6 +69,8 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
       const newAccessToken = (refreshResult.data as { accessToken: string })
         ?.accessToken;
 
+      console.log('New access token', newAccessToken, refreshResult);
+
       if (newAccessToken) {
         api.dispatch(
           login({
@@ -78,10 +80,10 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
         );
 
         return baseQuery(args, api, extraOptions);
+      } else {
+        api.dispatch(logOut());
+        window.location.href = '/login';
       }
-    } else {
-      api.dispatch(logOut());
-      window.location.href = '/login';
     }
   }
   return result;
@@ -146,8 +148,16 @@ export const rootApi = createApi({
       query: () => '/auth-user',
     }),
 
-    getPosts: builder.query<PostProps[], void>({
-      query: () => '/posts',
+    getPosts: builder.query<PostProps[], { limit?: number; offset?: number }>({
+      query: ({ limit, offset } = {}) => {
+        return {
+          url: '/posts',
+          params: {
+            limit,
+            offset,
+          },
+        };
+      },
       providesTags: [{ type: 'POSTS' }],
     }),
   }),
