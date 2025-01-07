@@ -30,6 +30,7 @@ const theme = createTheme({
       '2xl': 1536,
     },
   },
+  
 });
 
 export default createTheme(theme);
