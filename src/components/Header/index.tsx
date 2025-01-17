@@ -19,9 +19,10 @@ import {
 import { onpenDrawer } from '@redux/slice/settingSlice';
 import React from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 function Header() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
+  const navigate = useNavigate();
   const mediumScreen = useMediumScreen();
   console.log('mediumScreen', mediumScreen);
   // Dispatch
@@ -30,12 +31,22 @@ function Header() {
   const infoUser = useUserInfo();
   const logout = useLogout();
 
+  // State
+  const [searchValue, setSearchValue] = React.useState('');
+
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleSearchChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setSearchValue((event.target as HTMLInputElement).value);
+    console.log('Search value', searchValue);
   };
 
   const menuId = 'primary-search-account-menu';
@@ -103,6 +114,16 @@ function Header() {
                       '.MuiInputBase-root::before': {
                         display: 'none',
                       },
+                    }}
+                    onChange={(e) => {
+                      handleSearchChange(e);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        navigate(`/search/users`, {
+                          state: { searchQuery: searchValue },
+                        });
+                      }
                     }}
                   />
                 </div>

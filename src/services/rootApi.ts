@@ -29,6 +29,7 @@ import { PostProps } from '@components/PostList/Post';
 import { login, logOut } from '@redux/slice/authSlice';
 // import { persistor } from '@redux/store';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { SearchUsersResponse } from 'src/ultil/type';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
@@ -92,7 +93,7 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
 export const rootApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryForceLogout,
-  tagTypes: ['POSTS'],
+  tagTypes: ['POSTS', 'USERS'],
   endpoints: (builder) => ({
     register: builder.mutation({
       query: ({ fullName, email, password }) => ({
@@ -160,6 +161,47 @@ export const rootApi = createApi({
       },
       providesTags: [{ type: 'POSTS' }],
     }),
+
+    searchUsers: builder.query<
+      SearchUsersResponse,
+      { limit?: number; offset?: number; searchQuery?: string }
+    >({
+      query: ({ limit, offset, searchQuery } = {}) => {
+        const encodedSearchQuery = encodeURIComponent(
+          searchQuery?.trim() || ''
+        );
+        return {
+          url: `/search/users/${encodedSearchQuery}`,
+          params: {
+            limit,
+            offset,
+          },
+        };
+      },
+      providesTags: (result: any) =>
+        result
+          ? [
+              ...result.users.map(({ _id }: any) => ({
+                type: 'USERS',
+                id: _id,
+              })),
+              { type: 'USERS', id: 'LIST' },
+            ]
+          : [{ type: 'USERS', id: 'LIST' }],
+    }),
+
+    requestFriend: builder.mutation({
+      query: (userId) => ({
+        url: `/friends/request`,
+        method: 'POST',
+        body: {
+          friendId: userId,
+        },
+      }),
+      invalidatesTags: (result, error, args) => {
+        return [{ type: 'USERS', id: args }];
+      },
+    }),
   }),
 });
 
@@ -171,4 +213,6 @@ export const {
   useCreatePostMutation,
   useRefeshTokenMutation,
   useGetPostsQuery,
+  useSearchUsersQuery,
+  useRequestFriendMutation,
 } = rootApi;
