@@ -20,6 +20,7 @@ function SearchUser() {
   return (
     <div className="py-4 px-[80px] container flex-col">
       <h1 className="mb-2">Search</h1>
+
       <div className="pb-4 grid grid-cols-1 sm:grid-cols-3 gap-6">
         {(data?.users || []).map((user) => (
           <UserCard

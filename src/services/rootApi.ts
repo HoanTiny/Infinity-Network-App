@@ -46,45 +46,51 @@ const baseQuery = fetchBaseQuery({
 const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
   const result = await baseQuery(args, api, extraOptions);
   console.log('Result', result);
-  if (
-    result.error?.status === 401 &&
-    (result.error.data as { message: string })?.message === 'Token has expired.'
-  ) {
-    const refreshToken = (api.getState() as { auth: { refreshToken: string } })
-      .auth.refreshToken;
+  if (result.error?.status === 401) {
+    if (
+      (result.error.data as { message: string })?.message ===
+      'Token has expired.'
+    ) {
+      const refreshToken = (
+        api.getState() as { auth: { refreshToken: string } }
+      ).auth.refreshToken;
 
-    console.log('Refreshing token...', refreshToken);
-    if (refreshToken) {
-      const refreshResult = await baseQuery(
-        {
-          url: '/refresh-token',
-          method: 'POST',
-          body: {
-            refreshToken,
+      console.log('Refreshing token...', refreshToken);
+      if (refreshToken) {
+        const refreshResult = await baseQuery(
+          {
+            url: '/refresh-token',
+            method: 'POST',
+            body: {
+              refreshToken,
+            },
           },
-        },
-        api,
-        extraOptions
-      );
-
-      const newAccessToken = (refreshResult.data as { accessToken: string })
-        ?.accessToken;
-
-      console.log('New access token', newAccessToken, refreshResult);
-
-      if (newAccessToken) {
-        api.dispatch(
-          login({
-            accessToken: newAccessToken,
-            refreshToken,
-          })
+          api,
+          extraOptions
         );
 
-        return baseQuery(args, api, extraOptions);
-      } else {
-        api.dispatch(logOut());
-        window.location.href = '/login';
+        const newAccessToken = (refreshResult.data as { accessToken: string })
+          ?.accessToken;
+
+        console.log('New access token', newAccessToken, refreshResult);
+
+        if (newAccessToken) {
+          api.dispatch(
+            login({
+              accessToken: newAccessToken,
+              refreshToken,
+            })
+          );
+
+          return baseQuery(args, api, extraOptions);
+        } else {
+          api.dispatch(logOut());
+          window.location.href = '/login';
+        }
       }
+    } else {
+      api.dispatch(logOut());
+      window.location.href = '/login';
     }
   }
   return result;
@@ -202,6 +208,21 @@ export const rootApi = createApi({
         return [{ type: 'USERS', id: args }];
       },
     }),
+
+    getPendingFriendsRequest: builder.query<void, void>({
+      // <void, void>
+      query: () => '/friends/pending',
+      providesTags: (result: any) =>
+        result
+          ? [
+              ...result.map(({ _id }: any) => ({
+                type: 'PENDING_FRIENDS_REQUEST',
+                id: _id,
+              })),
+              { type: 'PENDING_FRIENDS_REQUEST', id: 'LIST' },
+            ]
+          : [{ type: 'PENDING_FRIENDS_REQUEST', id: 'LIST' }],
+    }),
   }),
 });
 
@@ -215,4 +236,5 @@ export const {
   useGetPostsQuery,
   useSearchUsersQuery,
   useRequestFriendMutation,
+  useGetPendingFriendsRequestQuery,
 } = rootApi;
