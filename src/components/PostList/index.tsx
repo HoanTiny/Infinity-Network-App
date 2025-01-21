@@ -7,9 +7,9 @@ function PostList() {
 
   return (
     <div>
-      {posts?.map((post: any) => (
+      {posts?.map((post: any, index) => (
         <Post
-          key={post._id}
+          key={index}
           fullName={post.author?.fullName}
           createAt={post?.createdAt}
           content={post.content}

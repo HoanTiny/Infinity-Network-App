@@ -98,7 +98,9 @@ function Header() {
               </IconButton>
             ) : (
               <>
-                <img src="/img/Logo2.svg" alt="logo" className="w-8 h-8" />
+                <a href="/">
+                  <img src="/img/Logo2.svg" alt="logo" className="w-8 h-8" />
+                </a>
                 <div className="flex items-center gap-1">
                   <Search />
                   {/* <Input placeholder="Search" /> */}

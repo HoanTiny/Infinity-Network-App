@@ -1,5 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, ReactNode } from 'react';
+import { useEffect, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 
@@ -7,12 +8,12 @@ interface SocketProviderProps {
   children: ReactNode;
 }
 
+export const socket = io('https://api.holetex.com', {
+  autoConnect: false,
+  path: '/v1/we-connect/socket.io',
+});
 function SocketProvider({ children }: SocketProviderProps) {
   const token = useSelector((state: any) => state.auth.accessToken);
-  const socket = io('https://api.holetex.com', {
-    autoConnect: false,
-    path: '/v1/we-connect/socket.io',
-  });
 
   useEffect(() => {
     socket.auth = { token };
@@ -34,7 +35,7 @@ function SocketProvider({ children }: SocketProviderProps) {
       socket.off('disconnect');
       socket.disconnect();
     };
-  }, [socket, token]);
+  }, [token]);
 
   return <>{children}</>;
 }

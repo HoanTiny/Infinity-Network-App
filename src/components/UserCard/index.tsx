@@ -1,8 +1,15 @@
+import { socket } from '@context/SocketProvider';
 import { Check } from '@mui/icons-material';
 import { Button, CircularProgress } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import deepOrange from '@mui/material/colors/deepOrange';
-import { useRequestFriendMutation } from '@services/rootApi';
+import MyButton from '@components/Button';
+
+import {
+  useAcceptFriendRequestMutation,
+  useCancelFriendRequestMutation,
+  useRequestFriendMutation,
+} from '@services/rootApi';
 
 export type UserCardProps = {
   isFriend: boolean;
@@ -21,6 +28,10 @@ function UserCard({
   requestReceived,
 }: UserCardProps) {
   const [requestFriend, { isLoading }] = useRequestFriendMutation();
+  const [aceptFriendRequest, { isLoading: isAccepting }] =
+    useAcceptFriendRequestMutation();
+  const [cancelFriendRequest, { isLoading: isCanceling }] =
+    useCancelFriendRequestMutation();
 
   const getActionButton = () => {
     if (isFriend) {
@@ -48,15 +59,30 @@ function UserCard({
     if (requestReceived) {
       return (
         <div className="flex gap-2">
-          <Button variant="contained" color="primary" className="flex gap-2">
-            <img src="/icons/user-check.svg" alt="" />
-            <span>Accept request</span>
-          </Button>
-
-          <Button variant="contained" color="primary" className="flex gap-2">
-            <img src="/icons/user-x.svg" alt="" />
-            <span>Decline request</span>
-          </Button>
+          <MyButton
+            variant="contained"
+            size="small"
+            className="btn btn-primary"
+            sx={{
+              fontSize: '10px',
+            }}
+            onClick={() => aceptFriendRequest(id)}
+            isLoading={isAccepting}
+            icon={<img src="/icons/check.svg" alt="" />}
+          >
+            Accept
+          </MyButton>
+          <MyButton
+            variant="outlined"
+            size="small"
+            className="btn btn-secondary"
+            sx={{ fontSize: '10px' }}
+            onClick={() => cancelFriendRequest(id)}
+            isLoading={isCanceling}
+            icon={<img src="/icons/close.svg" alt="" />}
+          >
+            Decline
+          </MyButton>
         </div>
       );
     }
@@ -66,7 +92,12 @@ function UserCard({
         variant="outlined"
         color="primary"
         className="flex gap-2 items-center"
-        onClick={() => requestFriend(id)}
+        onClick={async () => {
+          await requestFriend(id).unwrap();
+          socket.emit('friendRequestSent', {
+            receiverId: id,
+          });
+        }}
       >
         {isLoading ? (
           <CircularProgress size={20} className="mr-2" />

@@ -1,11 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Avatar, Button, CircularProgress } from '@mui/material';
-import { useGetPendingFriendsRequestQuery } from '@services/rootApi';
+import Button from '@components/Button';
+import { socket } from '@context/SocketProvider';
+import { Avatar, CircularProgress } from '@mui/material';
+import {
+  useAcceptFriendRequestMutation,
+  useCancelFriendRequestMutation,
+  useGetPendingFriendsRequestQuery,
+} from '@services/rootApi';
+import { useEffect } from 'react';
 type FriendItemRequestProps = {
   fullName: string;
+  id: string;
 };
 
-const FriendItemRequest = ({ fullName }: FriendItemRequestProps) => {
+const FriendItemRequest = ({ fullName, id }: FriendItemRequestProps) => {
+  const [aceptFriendRequest, { isLoading: isAccepting }] =
+    useAcceptFriendRequestMutation();
+  const [cancelFriendRequest, { isLoading: isCanceling }] =
+    useCancelFriendRequestMutation();
+  console.log('UserId: ', id);
   return (
     <div className="friend-item-request flex gap-4 mb-4">
       <div className="friend-item-request__avatar">
@@ -29,6 +42,9 @@ const FriendItemRequest = ({ fullName }: FriendItemRequestProps) => {
             sx={{
               fontSize: '10px',
             }}
+            onClick={() => aceptFriendRequest(id)}
+            isLoading={isAccepting}
+            icon={<img src="/icons/check.svg" alt="" />}
           >
             Accept
           </Button>
@@ -37,6 +53,9 @@ const FriendItemRequest = ({ fullName }: FriendItemRequestProps) => {
             size="small"
             className="btn btn-secondary"
             sx={{ fontSize: '10px' }}
+            onClick={() => cancelFriendRequest(id)}
+            isLoading={isCanceling}
+            icon={<img src="/icons/close.svg" alt="" />}
           >
             Decline
           </Button>
@@ -47,9 +66,21 @@ const FriendItemRequest = ({ fullName }: FriendItemRequestProps) => {
 };
 
 function FriendRequest() {
-  const { data = [], isFetching } = useGetPendingFriendsRequestQuery();
+  const { data = [], isFetching, refetch } = useGetPendingFriendsRequestQuery();
 
   console.log('data', data);
+
+  useEffect(() => {
+    socket.on('friendRequestReceived', (data) => {
+      console.log('[friendRequestReceived]', { data });
+      refetch();
+    });
+
+    return () => {
+      socket.off('friendRequestReceived');
+    };
+  }, [refetch]);
+
   return (
     <div className="card">
       <div className="card__header flex justify-between items-center mb-2">
@@ -64,7 +95,11 @@ function FriendRequest() {
       <div className="card__content">
         {isFetching && <CircularProgress size={20} className="block mx-auto" />}
         {data?.slice(0, 3).map((item: any) => (
-          <FriendItemRequest key={item._id} fullName={item.fullName} />
+          <FriendItemRequest
+            key={item._id}
+            fullName={item.fullName}
+            id={item._id}
+          />
         ))}
       </div>
     </div>

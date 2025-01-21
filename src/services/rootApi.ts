@@ -99,7 +99,7 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
 export const rootApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryForceLogout,
-  tagTypes: ['POSTS', 'USERS'],
+  tagTypes: ['POSTS', 'USERS', 'PENDING_FRIENDS_REQUEST'],
   endpoints: (builder) => ({
     register: builder.mutation({
       query: ({ fullName, email, password }) => ({
@@ -223,6 +223,40 @@ export const rootApi = createApi({
             ]
           : [{ type: 'PENDING_FRIENDS_REQUEST', id: 'LIST' }],
     }),
+
+    acceptFriendRequest: builder.mutation({
+      query: (userId) => ({
+        url: `/friends/accept`,
+        method: 'POST',
+        body: {
+          friendId: userId,
+        },
+      }),
+      invalidatesTags: (result, error, args) => {
+        // AcceptFriendRequest
+        return [
+          { type: 'USERS', id: args },
+          { type: 'PENDING_FRIENDS_REQUEST', id: args },
+        ];
+      },
+    }),
+
+    cancelFriendRequest: builder.mutation({
+      query: (userId) => ({
+        url: `/friends/cancel`,
+        method: 'POST',
+        body: {
+          friendId: userId,
+        },
+      }),
+      invalidatesTags: (result, error, args) => {
+        // CancelFriendRequest
+        return [
+          { type: 'USERS', id: args },
+          { type: 'PENDING_FRIENDS_REQUEST', id: args },
+        ];
+      },
+    }),
   }),
 });
 
@@ -237,4 +271,6 @@ export const {
   useSearchUsersQuery,
   useRequestFriendMutation,
   useGetPendingFriendsRequestQuery,
+  useAcceptFriendRequestMutation,
+  useCancelFriendRequestMutation,
 } = rootApi;
