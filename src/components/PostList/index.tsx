@@ -5,6 +5,7 @@ import Post from './Post';
 function PostList() {
   const { isFetching, posts } = useLazyLoading();
 
+  console.log('possttt, ', posts);
   return (
     <div>
       {posts?.map((post: any, index) => (

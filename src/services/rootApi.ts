@@ -99,7 +99,7 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
 export const rootApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryForceLogout,
-  tagTypes: ['POSTS', 'USERS', 'PENDING_FRIENDS_REQUEST'],
+  tagTypes: ['POSTS', 'USERS', '0', 'PENDING_FRIENDS_REQUEST'],
   endpoints: (builder) => ({
     register: builder.mutation({
       query: ({ fullName, email, password }) => ({
@@ -148,7 +148,66 @@ export const rootApi = createApi({
         body: formData,
       }),
 
-      invalidatesTags: ['POSTS'],
+      // invalidatesTags: ['POSTS'],
+
+      //Optimistic Update
+      async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
+        console.log('cvh', args);
+        const store = getState() as unknown as {
+          auth: { userInfo: { _id: string; fullName: string } };
+        };
+        const tempId = crypto.randomUUID();
+        const newPost = {
+          _id: tempId,
+          likes: [],
+          comments: [],
+          content: args.get('content'),
+          author: {
+            notifications: [],
+            _id: store.auth.userInfo._id,
+            fullName: store.auth.userInfo.fullName,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          __v: 0,
+        };
+
+        const patchResult = dispatch(
+          rootApi.util.updateQueryData(
+            'getPosts',
+            { limit: 10, offset: 0 },
+            (draft) => {
+              draft.unshift(newPost as any);
+            }
+          )
+        );
+        try {
+          const { data } = await queryFulfilled;
+          console.log('data333', { data });
+          dispatch(
+            rootApi.util.updateQueryData(
+              'getPosts',
+              { limit: 10, offset: 0 },
+              (draft) => {
+                const index = draft.findIndex(
+                  (post: any) => post._id === tempId
+                );
+                if (index !== -1) {
+                  draft[index] = data;
+                }
+              }
+            )
+          );
+        } catch {
+          patchResult.undo();
+
+          /**
+           * Alternatively, on failure you can invalidate the corresponding cache tags
+           * to trigger a re-fetch:
+           * dispatch(api.util.invalidateTags(['Post']))
+           */
+        }
+      },
     }),
     getAuthUser: builder.query<void, void>({
       // <void, void>
@@ -257,6 +316,21 @@ export const rootApi = createApi({
         ];
       },
     }),
+
+    unfriendRequest: builder.mutation({
+      query: (userId) => ({
+        url: `/friends/unfriend`,
+        method: 'POST',
+        body: {
+          friendId: userId,
+        },
+      }),
+
+      invalidatesTags: (result, error, args) => {
+        // UnfriendRequest
+        return [{ type: 'USERS', id: args }];
+      },
+    }),
   }),
 });
 
@@ -273,4 +347,5 @@ export const {
   useGetPendingFriendsRequestQuery,
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
+  useUnfriendRequestMutation,
 } = rootApi;

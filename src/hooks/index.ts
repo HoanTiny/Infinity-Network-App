@@ -17,9 +17,11 @@ export const useLazyLoading = () => {
   const [hasMore, setHasMore] = useState(true);
   const { data, isFetching, isSuccess } = useGetPostsQuery({ offset, limit });
 
+  console.log('useLazyLoading', data, offset);
+
   const previousDataRef = useRef<PostProps[] | undefined>();
-  // console.log('first', previousDataRef.current);
   useEffect(() => {
+    console.log('data', data);
     if (data && isSuccess && previousDataRef.current !== data) {
       if (data.length === 0) {
         setHasMore(false);
@@ -28,6 +30,9 @@ export const useLazyLoading = () => {
       console.log('data', data);
       previousDataRef.current = data;
       setPosts((prevPosts) => {
+        if (offset === 0) {
+          return data;
+        }
         return [...prevPosts, ...data];
       });
     }
@@ -39,7 +44,16 @@ export const useLazyLoading = () => {
     }
   };
 
-  useInfinityScrolling({ isFetching, hasMore, loadMore });
+  useInfinityScrolling({
+    isFetching,
+    hasMore,
+    loadMore,
+    offset,
+    resetFn() {
+      setOffset(0);
+      setHasMore(true);
+    },
+  });
 
   return { hasMore, isFetching, loadMore, posts };
 };
@@ -48,12 +62,16 @@ interface UseInfinityScrollingProps {
   isFetching: boolean;
   hasMore: boolean;
   loadMore: () => void;
+  offset?: number;
+  resetFn?: () => void;
 }
 
 export const useInfinityScrolling = ({
   isFetching,
   hasMore,
   loadMore,
+  offset,
+  resetFn,
 }: UseInfinityScrollingProps) => {
   const handleScroll = useMemo(() => {
     return throttle(() => {
@@ -61,6 +79,14 @@ export const useInfinityScrolling = ({
       const scrollTop = document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
+
+      if (scrollTop < 100 && offset && offset > 0) {
+        if (resetFn) {
+          resetFn();
+        }
+
+        return;
+      }
 
       if (
         scrollTop + clientHeight + 50 >= scrollHeight &&

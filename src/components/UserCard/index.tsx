@@ -9,7 +9,9 @@ import {
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
   useRequestFriendMutation,
+  useUnfriendRequestMutation,
 } from '@services/rootApi';
+import { UserMinus } from '@components/Icon';
 
 export type UserCardProps = {
   isFriend: boolean;
@@ -32,14 +34,28 @@ function UserCard({
     useAcceptFriendRequestMutation();
   const [cancelFriendRequest, { isLoading: isCanceling }] =
     useCancelFriendRequestMutation();
+  const [unFriendRequest, { isLoading: isUnFriending }] =
+    useUnfriendRequestMutation();
 
   const getActionButton = () => {
     if (isFriend) {
       return (
-        <Button variant="contained" color="primary" className="flex gap-2">
-          <img src="/icons/messages.svg" alt="" />
-          <span>Message</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="contained" color="primary" className="flex gap-2">
+            <img src="/icons/messages.svg" alt="" />
+            <span>Message</span>
+          </Button>
+          <MyButton
+            variant="contained"
+            size="small"
+            onClick={() => unFriendRequest(id)}
+            className="flex gap-2"
+            isLoading={isUnFriending}
+            icon={<UserMinus width={20} height={20} color="#fff" />}
+          >
+            Unfriend
+          </MyButton>
+        </div>
       );
     }
 
