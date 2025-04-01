@@ -16,7 +16,7 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Close } from '@mui/icons-material';
-import { useCreatePostMutation } from '@services/rootApi';
+import { useCreatePostMutation } from '@services/postApi';
 import { useDispatch } from 'react-redux';
 import { closeDialog } from '@redux/slice/dialogSlice';
 import { openSnackbar } from '@redux/slice/snackbar';

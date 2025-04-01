@@ -1,6 +1,6 @@
 import { PostProps } from '@components/PostList/Post';
 import { useMediaQuery, useTheme } from '@mui/material';
-import { useGetPostsQuery } from '@services/rootApi';
+import { useGetPostsQuery } from '@services/postApi';
 import { throttle } from 'lodash';
 import { useEffect, useMemo, useRef, useState } from 'react';
 

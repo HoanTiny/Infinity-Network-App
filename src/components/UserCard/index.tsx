@@ -10,7 +10,7 @@ import {
   useCancelFriendRequestMutation,
   useRequestFriendMutation,
   useUnfriendRequestMutation,
-} from '@services/rootApi';
+} from '@services/friendApi';
 import { UserMinus } from '@components/Icon';
 
 export type UserCardProps = {

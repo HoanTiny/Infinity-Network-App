@@ -6,7 +6,7 @@ import {
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
   useGetPendingFriendsRequestQuery,
-} from '@services/rootApi';
+} from '@services/friendApi';
 import { useEffect } from 'react';
 type FriendItemRequestProps = {
   fullName: string;

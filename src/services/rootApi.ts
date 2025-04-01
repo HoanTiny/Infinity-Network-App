@@ -25,7 +25,6 @@
 
 // export const { useRegisterMutation } = rootApi;
 
-import { PostProps } from '@components/PostList/Post';
 import { login, logOut } from '@redux/slice/authSlice';
 // import { persistor } from '@redux/store';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
@@ -100,6 +99,9 @@ export const rootApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryForceLogout,
   tagTypes: ['POSTS', 'USERS', '0', 'PENDING_FRIENDS_REQUEST'],
+  // refetchOnMountOrArgChange: 5,
+  refetchOnFocus: true, // Tự động gọi lại API khi cửa sổ/tab ứng dụng lấy lại trạng thái focus
+  refetchOnReconnect: true, // Tự động gọi lại API khi kết nối mạng được khôi phục
   endpoints: (builder) => ({
     register: builder.mutation({
       query: ({ fullName, email, password }) => ({
@@ -141,90 +143,10 @@ export const rootApi = createApi({
         },
       }),
     }),
-    createPost: builder.mutation({
-      query: (formData) => ({
-        url: 'posts',
-        method: 'POST',
-        body: formData,
-      }),
 
-      // invalidatesTags: ['POSTS'],
-
-      //Optimistic Update
-      async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
-        console.log('cvh', args);
-        const store = getState() as unknown as {
-          auth: { userInfo: { _id: string; fullName: string } };
-        };
-        const tempId = crypto.randomUUID();
-        const newPost = {
-          _id: tempId,
-          likes: [],
-          comments: [],
-          content: args.get('content'),
-          author: {
-            notifications: [],
-            _id: store.auth.userInfo._id,
-            fullName: store.auth.userInfo.fullName,
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          __v: 0,
-        };
-
-        const patchResult = dispatch(
-          rootApi.util.updateQueryData(
-            'getPosts',
-            { limit: 10, offset: 0 },
-            (draft) => {
-              draft.unshift(newPost as any);
-            }
-          )
-        );
-        try {
-          const { data } = await queryFulfilled;
-          console.log('data333', { data });
-          dispatch(
-            rootApi.util.updateQueryData(
-              'getPosts',
-              { limit: 10, offset: 0 },
-              (draft) => {
-                const index = draft.findIndex(
-                  (post: any) => post._id === tempId
-                );
-                if (index !== -1) {
-                  draft[index] = data;
-                }
-              }
-            )
-          );
-        } catch {
-          patchResult.undo();
-
-          /**
-           * Alternatively, on failure you can invalidate the corresponding cache tags
-           * to trigger a re-fetch:
-           * dispatch(api.util.invalidateTags(['Post']))
-           */
-        }
-      },
-    }),
     getAuthUser: builder.query<void, void>({
       // <void, void>
       query: () => '/auth-user',
-    }),
-
-    getPosts: builder.query<PostProps[], { limit?: number; offset?: number }>({
-      query: ({ limit, offset } = {}) => {
-        return {
-          url: '/posts',
-          params: {
-            limit,
-            offset,
-          },
-        };
-      },
-      providesTags: [{ type: 'POSTS' }],
     }),
 
     searchUsers: builder.query<
@@ -254,83 +176,6 @@ export const rootApi = createApi({
             ]
           : [{ type: 'USERS', id: 'LIST' }],
     }),
-
-    requestFriend: builder.mutation({
-      query: (userId) => ({
-        url: `/friends/request`,
-        method: 'POST',
-        body: {
-          friendId: userId,
-        },
-      }),
-      invalidatesTags: (result, error, args) => {
-        return [{ type: 'USERS', id: args }];
-      },
-    }),
-
-    getPendingFriendsRequest: builder.query<void, void>({
-      // <void, void>
-      query: () => '/friends/pending',
-      providesTags: (result: any) =>
-        result
-          ? [
-              ...result.map(({ _id }: any) => ({
-                type: 'PENDING_FRIENDS_REQUEST',
-                id: _id,
-              })),
-              { type: 'PENDING_FRIENDS_REQUEST', id: 'LIST' },
-            ]
-          : [{ type: 'PENDING_FRIENDS_REQUEST', id: 'LIST' }],
-    }),
-
-    acceptFriendRequest: builder.mutation({
-      query: (userId) => ({
-        url: `/friends/accept`,
-        method: 'POST',
-        body: {
-          friendId: userId,
-        },
-      }),
-      invalidatesTags: (result, error, args) => {
-        // AcceptFriendRequest
-        return [
-          { type: 'USERS', id: args },
-          { type: 'PENDING_FRIENDS_REQUEST', id: args },
-        ];
-      },
-    }),
-
-    cancelFriendRequest: builder.mutation({
-      query: (userId) => ({
-        url: `/friends/cancel`,
-        method: 'POST',
-        body: {
-          friendId: userId,
-        },
-      }),
-      invalidatesTags: (result, error, args) => {
-        // CancelFriendRequest
-        return [
-          { type: 'USERS', id: args },
-          { type: 'PENDING_FRIENDS_REQUEST', id: args },
-        ];
-      },
-    }),
-
-    unfriendRequest: builder.mutation({
-      query: (userId) => ({
-        url: `/friends/unfriend`,
-        method: 'POST',
-        body: {
-          friendId: userId,
-        },
-      }),
-
-      invalidatesTags: (result, error, args) => {
-        // UnfriendRequest
-        return [{ type: 'USERS', id: args }];
-      },
-    }),
   }),
 });
 
@@ -339,13 +184,6 @@ export const {
   useLoginMutation,
   useVerifyOTPMutation,
   useGetAuthUserQuery,
-  useCreatePostMutation,
   useRefeshTokenMutation,
-  useGetPostsQuery,
   useSearchUsersQuery,
-  useRequestFriendMutation,
-  useGetPendingFriendsRequestQuery,
-  useAcceptFriendRequestMutation,
-  useCancelFriendRequestMutation,
-  useUnfriendRequestMutation,
 } = rootApi;
