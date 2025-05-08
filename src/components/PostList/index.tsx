@@ -2,10 +2,13 @@
 import Loading from '@components/Loading';
 import { useLazyLoading } from '@hooks/index';
 import Post from './Post';
+import { useLikePostMutation } from '@services/postApi';
+import { useUserInfo } from '@hooks/getUserinfo';
 function PostList() {
   const { isFetching, posts } = useLazyLoading();
+  const [likePost] = useLikePostMutation();
+  const { _id } = useUserInfo() as { _id: string };
 
-  console.log('possttt, ', posts);
   return (
     <div>
       {posts?.map((post: any, index) => (
@@ -17,6 +20,11 @@ function PostList() {
           image={post?.image}
           likes={post?.likes}
           comments={post?.comments}
+          postId={post._id}
+          isLiked={post.likes.some((like: any) => like.author?._id === _id)}
+          handleLike={(postId: string) => {
+            likePost(postId);
+          }}
         />
       ))}
       {isFetching && <Loading />}

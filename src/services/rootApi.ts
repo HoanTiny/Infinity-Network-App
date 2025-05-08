@@ -100,8 +100,8 @@ export const rootApi = createApi({
   baseQuery: baseQueryForceLogout,
   tagTypes: ['POSTS', 'USERS', '0', 'PENDING_FRIENDS_REQUEST'],
   // refetchOnMountOrArgChange: 5,
-  refetchOnFocus: true, // Tự động gọi lại API khi cửa sổ/tab ứng dụng lấy lại trạng thái focus
-  refetchOnReconnect: true, // Tự động gọi lại API khi kết nối mạng được khôi phục
+  // refetchOnFocus: true, // Tự động gọi lại API khi cửa sổ/tab ứng dụng lấy lại trạng thái focus
+  // refetchOnReconnect: true, // Tự động gọi lại API khi kết nối mạng được khôi phục
   endpoints: (builder) => ({
     register: builder.mutation({
       query: ({ fullName, email, password }) => ({

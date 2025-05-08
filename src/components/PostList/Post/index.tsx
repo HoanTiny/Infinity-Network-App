@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommentIcon, LikeIcon, ShareIcon } from '@components/Icon';
 import { Avatar } from '@mui/material';
 import { deepOrange } from '@mui/material/colors';
@@ -10,15 +11,23 @@ export type PostProps = {
   image: string;
   likes: Array<string>;
   comments: Array<string>;
+  handleLike: (postId: string) => void;
+  postId: string;
+  isLiked?: boolean;
 };
+
 function Post({
   fullName,
   createAt,
   content,
   image,
+  postId,
   likes = [],
   comments = [],
+  handleLike,
+  isLiked = false,
 }: PostProps) {
+  // console.log('likes', isLiked);
   return (
     <div className="flex flex-col gap-4 card mt-4">
       <div className="flex gap-4 ">
@@ -49,7 +58,11 @@ function Post({
 
       <div className="flex gap-4 justify-between">
         <div className="flex gap-2 items-center">
-          <LikeIcon width={20} height={20} />
+          {isLiked ? (
+            <img src="/icons/Liked.svg" alt="like" width={20} height={20} />
+          ) : (
+            <LikeIcon width={20} height={20} />
+          )}
           <span className="text-[16px] text-[#4B465C]">{likes.length}</span>
         </div>
 
@@ -60,8 +73,16 @@ function Post({
       </div>
 
       <div className="flex gap-4 justify-between border-t border-[#DBDADE] pt-3 px-6">
-        <div className="flex gap-2 items-center">
-          <LikeIcon width={20} height={20} />
+        <div
+          className="flex gap-2 items-center cursor-pointer"
+          onClick={() => handleLike(postId)}
+        >
+          {isLiked ? (
+            <img src="/icons/Liked.svg" alt="like" width={20} height={20} />
+          ) : (
+            <LikeIcon width={20} height={20} />
+          )}
+
           <span className="text-[16px] text-[#4B465C]">Like</span>
         </div>
 
