@@ -2,11 +2,14 @@
 import Loading from '@components/Loading';
 import { useLazyLoading } from '@hooks/index';
 import Post from './Post';
-import { useLikePostMutation } from '@services/postApi';
+import { useLikePostMutation, useUnlikePostMutation } from '@services/postApi';
 import { useUserInfo } from '@hooks/getUserinfo';
+import { useCreateNotificationMutation } from '@services/notificationApi';
 function PostList() {
   const { isFetching, posts } = useLazyLoading();
   const [likePost] = useLikePostMutation();
+  const [createNotification] = useCreateNotificationMutation();
+  const [unlikePost] = useUnlikePostMutation();
   const { _id } = useUserInfo() as { _id: string };
 
   return (
@@ -22,8 +25,21 @@ function PostList() {
           comments={post?.comments}
           postId={post._id}
           isLiked={post.likes.some((like: any) => like.author?._id === _id)}
-          handleLike={(postId: string) => {
-            likePost(postId);
+          handleLike={async (postId: string) => {
+            if (post.likes.some((like: any) => like.author?._id === _id)) {
+              unlikePost(postId);
+            } else {
+              const res = await likePost(postId).unwrap();
+              console.log('res', res, post);
+              if (_id === res.author) {
+                createNotification({
+                  userId: post.author?._id,
+                  postId: post._id,
+                  type: 'like',
+                  typeId: res._id,
+                });
+              }
+            }
           }}
         />
       ))}

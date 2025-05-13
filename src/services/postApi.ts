@@ -223,10 +223,44 @@ export const postApi = rootApi.injectEndpoints({
           };
         },
         invalidatesTags: ['POSTS'],
+        async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
+          console.log('first', args);
+
+          const store = getState() as unknown as {
+            auth: { userInfo: { _id: string; fullName: string } };
+          };
+          const userId = store.auth.userInfo._id;
+
+          // Optimistic update: Remove the like from the post
+          const patchResult = dispatch(
+            postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
+              const currentPost = draft.ids
+                .map((id) => draft.entities[id])
+                .find((post: any) => post?._id === args);
+
+              if (currentPost) {
+                currentPost.likes = currentPost.likes.filter(
+                  (like: any) => like.author._id !== userId
+                );
+              }
+            })
+          );
+          try {
+            const { data } = await queryFulfilled;
+            console.log('Dislike successful', data);
+          } catch {
+            console.log('error');
+            patchResult.undo();
+          }
+        },
       }),
     };
   },
 });
 
-export const { useCreatePostMutation, useGetPostsQuery, useLikePostMutation } =
-  postApi;
+export const {
+  useCreatePostMutation,
+  useGetPostsQuery,
+  useLikePostMutation,
+  useUnlikePostMutation,
+} = postApi;

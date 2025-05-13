@@ -1,13 +1,12 @@
+import NotificationsPaenl from '@components/NotificationsPanel.tsx';
 import { useUserInfo } from '@hooks/getUserinfo';
 import { useMediumScreen } from '@hooks/index';
 import { useLogout } from '@hooks/useLogout';
 import { Search } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import {
   AppBar,
   Avatar,
-  Badge,
   Box,
   IconButton,
   Menu,
@@ -133,22 +132,14 @@ function Header() {
             )}
           </div>
 
-          <div>
+          <div className="flex items-center gap-2">
             {mediumScreen && (
               <IconButton>
                 <Search />
               </IconButton>
             )}
 
-            <IconButton
-              size="large"
-              aria-label="show 17 new notifications"
-              color="inherit"
-            >
-              <Badge badgeContent={17} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
+            <NotificationsPaenl />
 
             <IconButton
               size="large"
