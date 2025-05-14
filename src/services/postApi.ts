@@ -254,6 +254,75 @@ export const postApi = rootApi.injectEndpoints({
           }
         },
       }),
+      commentPost: builder.mutation({
+        query: ({ postId, comment }) => {
+          return {
+            url: `/posts/${postId}/comments`,
+            method: 'POST',
+            body: {
+              comment: comment,
+            },
+          };
+        },
+        invalidatesTags: ['POSTS'],
+        async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
+          // console.log('first', arg);
+
+          const store = getState() as unknown as {
+            auth: { userInfo: { _id: string; fullName: string } };
+          };
+
+          const optimisticComment = {
+            _id: crypto.randomUUID(),
+            comment: arg.comment,
+            author: {
+              _id: store.auth.userInfo._id,
+              fullName: store.auth.userInfo.fullName,
+            },
+            post: arg.postId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            __v: 0,
+          };
+
+          const patchResult = dispatch(
+            postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
+              const currentPost = draft.ids
+                .map((id) => draft.entities[id])
+                .find((post: any) => post?._id === arg.postId);
+
+              if (currentPost) {
+                currentPost.comments.push(optimisticComment as any);
+              }
+            })
+          );
+
+          // console.log('patchResult', patchResult);
+
+          try {
+            const { data } = await queryFulfilled;
+            // console.log('Comment successful', data);
+            dispatch(
+              postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
+                const currentPost = draft.ids
+                  .map((id) => draft.entities[id])
+                  .find((post: any) => post?._id === arg.postId);
+                if (currentPost) {
+                  const index = currentPost.comments.findIndex(
+                    (comment: any) => comment._id === optimisticComment._id
+                  );
+                  if (index !== -1) {
+                    currentPost.comments[index] = data;
+                  }
+                }
+              })
+            );
+          } catch (error) {
+            console.log('error', error);
+            patchResult.undo();
+          }
+        },
+      }),
     };
   },
 });
@@ -263,4 +332,5 @@ export const {
   useGetPostsQuery,
   useLikePostMutation,
   useUnlikePostMutation,
+  useCommentPostMutation,
 } = postApi;

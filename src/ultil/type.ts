@@ -68,3 +68,16 @@ export interface PostResponsive {
   ids: string[];
   entities: Record<string, PostProps>;
 }
+
+export interface Comment {
+  _id: string;
+  comment: string;
+  author: {
+    _id: string;
+    fullName: string;
+  };
+  post: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}

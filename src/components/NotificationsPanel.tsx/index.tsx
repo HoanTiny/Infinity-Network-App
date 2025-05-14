@@ -111,7 +111,12 @@ const NotificationsPanel = () => {
                       fontWeight={note.seen ? 400 : 600}
                     >
                       {note.author?.fullName}{' '}
-                      {note.like ? 'liked' : 'reacted to'} your post
+                      {note.like
+                        ? 'liked'
+                        : note.comment
+                        ? 'commented on'
+                        : 'reacted to'}{' '}
+                      your post
                     </Typography>
                   }
                   secondary={

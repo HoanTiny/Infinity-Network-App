@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import CommentSection from '@components/CommentSection';
 import { CommentIcon, LikeIcon, ShareIcon } from '@components/Icon';
 import { Avatar } from '@mui/material';
 import { deepOrange } from '@mui/material/colors';
 import dayjs from 'dayjs';
+import { useState } from 'react';
+import { Comment } from 'src/ultil/type';
 
 export type PostProps = {
   fullName: string;
@@ -10,10 +13,12 @@ export type PostProps = {
   content: string;
   image: string;
   likes: Array<string>;
-  comments: Array<string>;
+  comments: Comment[];
   handleLike: (postId: string) => void;
   postId: string;
   isLiked?: boolean;
+  handleComment: (postId: string, comment: string) => void;
+  resetComment?: boolean;
 };
 
 function Post({
@@ -26,8 +31,16 @@ function Post({
   comments = [],
   handleLike,
   isLiked = false,
+  handleComment,
+  resetComment,
 }: PostProps) {
-  // console.log('likes', isLiked);
+  const [toggleComment, setToggleComment] = useState(false);
+
+  const handleToggleComment = () => {
+    setToggleComment((prev) => !prev);
+    console.log('toggleComment', toggleComment);
+  };
+  // console.log('comments', comments);
   return (
     <div className="flex flex-col gap-4 card mt-4">
       <div className="flex gap-4 ">
@@ -66,7 +79,10 @@ function Post({
           <span className="text-[16px] text-[#4B465C]">{likes.length}</span>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div
+          className="flex gap-2 items-center cursor-pointer"
+          onClick={handleToggleComment}
+        >
           <span className="text-[16px] text-[#4B465C]">{comments.length}</span>
           <span className="text-[16px] text-[#4B465C]">Comments</span>
         </div>
@@ -86,7 +102,10 @@ function Post({
           <span className="text-[16px] text-[#4B465C]">Like</span>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div
+          className="flex gap-2 items-center cursor-pointer"
+          onClick={handleToggleComment}
+        >
           <CommentIcon width={20} height={20} />
           <span className="text-[16px] text-[#4B465C]">Comments</span>
         </div>
@@ -96,6 +115,16 @@ function Post({
           <span className="text-[16px] text-[#4B465C]">Shares</span>
         </div>
       </div>
+      {toggleComment && (
+        <div>
+          <CommentSection
+            comments={comments}
+            postId={postId}
+            handleComment={handleComment}
+            resetComment={resetComment}
+          />
+        </div>
+      )}
     </div>
   );
 }
