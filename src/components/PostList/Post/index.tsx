@@ -83,8 +83,9 @@ function Post({
           className="flex gap-2 items-center cursor-pointer"
           onClick={handleToggleComment}
         >
-          <span className="text-[16px] text-[#4B465C]">{comments.length}</span>
-          <span className="text-[16px] text-[#4B465C]">Comments</span>
+          <span className="text-[16px] text-[#4B465C]">
+            {comments.length} Comments
+          </span>
         </div>
       </div>
 

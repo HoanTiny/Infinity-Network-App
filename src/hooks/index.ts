@@ -1,9 +1,12 @@
 // import { PostsApiResponse } from '@components/PostList/Post';
 import { useMediaQuery, useTheme } from '@mui/material';
+import { useCreateNotificationMutation } from '@services/notificationApi';
 import { useGetPostsQuery } from '@services/postApi';
 import { throttle } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PostResponsive } from 'src/ultil/type';
+import { useUserInfo } from './getUserinfo';
+import { socket } from '@context/SocketProvider';
 
 export function useMediumScreen() {
   const theme = useTheme();
@@ -113,4 +116,39 @@ UseInfinityScrollingProps) => {
       handleScroll.cancel();
     };
   }, [handleScroll]);
+};
+
+// CREATE_NOTIFICATION
+
+export const useCreateNotification = () => {
+  const [createNotification] = useCreateNotificationMutation();
+  const userId = useUserInfo();
+  const handleCreateNotification = async ({
+    userId: receiverId,
+    postId,
+    type,
+    typeId,
+  }: {
+    userId: string;
+    postId: string;
+    type: string;
+    typeId: string;
+  }) => {
+    try {
+      if (userId === receiverId) {
+        return;
+      }
+      const res = await createNotification({
+        userId: receiverId,
+        postId,
+        type,
+        typeId,
+      }).unwrap();
+      console.log('res', res);
+      socket.emit('CREATE_NOTIFICATION', res);
+    } catch (error) {
+      console.log('error', error);
+    }
+  };
+  return { handleCreateNotification };
 };

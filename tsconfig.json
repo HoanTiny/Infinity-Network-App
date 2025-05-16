@@ -32,7 +32,8 @@
       "@hooks/*": ["src/hooks/*"],
       "@context/*": ["src/context/*"],
       "@redux/*": ["src/redux/*"],
-      "@services/*": ["src/services/*"]
+      "@services/*": ["src/services/*"],
+      "@ultil/*": ["src/ultil/*"]
     },
     "esModuleInterop": true
   },

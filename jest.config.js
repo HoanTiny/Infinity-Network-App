@@ -7,6 +7,7 @@ export default {
   },
   moduleNameMapper: {
     '^@components/(.*)$': '<rootDir>/src/components/$1',
+    '^@hooks/(.*)$': '<rootDir>/src/hooks/$1',
     '\\.(css|less)$': 'identity-obj-proxy',
   },
 };

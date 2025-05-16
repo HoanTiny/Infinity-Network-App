@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
 import {
   Badge,
   Box,
@@ -17,11 +18,13 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CircleIcon from '@mui/icons-material/FiberManualRecord';
 import { useGetNotificationsQuery } from '@services/notificationApi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { socket } from '@context/SocketProvider';
 
 const NotificationsPanel = () => {
-  const { data } = useGetNotificationsQuery() as {
+  const { data, refetch } = useGetNotificationsQuery() as {
     data: { notifications: any[] };
+    refetch: () => void;
   };
   const notifications = data?.notifications || [];
   const newCount = notifications.filter((n) => !n.seen).length;
@@ -32,6 +35,21 @@ const NotificationsPanel = () => {
   const handleOpen = (e: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
+
+  useEffect(() => {
+    const handleNotification = () => {
+      refetch();
+    };
+
+    // Assuming you have a socket connection set up
+    socket.on('CREATE_NOTIFICATION_REQUEST', (data: any) => {
+      console.log('data', data);
+    });
+
+    return () => {
+      socket.off('CREATE_NOTIFICATION_REQUEST', handleNotification);
+    };
+  }, [refetch]);
 
   return (
     <Box>

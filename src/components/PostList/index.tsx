@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Loading from '@components/Loading';
-import { useLazyLoading } from '@hooks/index';
+import { useCreateNotification, useLazyLoading } from '@hooks/index';
 import Post from './Post';
 import {
   useCommentPostMutation,
@@ -8,13 +8,13 @@ import {
   useUnlikePostMutation,
 } from '@services/postApi';
 import { useUserInfo } from '@hooks/getUserinfo';
-import { useCreateNotificationMutation } from '@services/notificationApi';
+// import { useCreateNotificationMutation } from '@services/notificationApi';
 import { useEffect, useState } from 'react';
 import { Bounce, toast } from 'react-toastify';
 function PostList() {
   const { isFetching, posts } = useLazyLoading();
   const [likePost] = useLikePostMutation();
-  const [createNotification] = useCreateNotificationMutation();
+  const { handleCreateNotification } = useCreateNotification();
   const [unlikePost] = useUnlikePostMutation();
   const { _id } = useUserInfo() as { _id: string };
   console.log('posts', posts);
@@ -71,14 +71,12 @@ function PostList() {
               const res = await likePost(postId).unwrap();
               console.log('res', res, post);
 
-              if (post.author?._id !== _id) {
-                createNotification({
-                  userId: post.author?._id,
-                  postId: post._id,
-                  type: 'like',
-                  typeId: res._id,
-                });
-              }
+              handleCreateNotification({
+                userId: post.author?._id,
+                postId: post._id,
+                type: 'like',
+                typeId: res._id,
+              });
             }
           }}
           handleComment={async (postId: string, comment: string) => {
@@ -87,14 +85,13 @@ function PostList() {
               comment: comment,
             }).unwrap();
             console.log('res', res, post);
-            if (post.author?._id !== _id) {
-              createNotification({
-                userId: post.author?._id,
-                postId: post._id,
-                type: 'comment',
-                typeId: res._id,
-              });
-            }
+
+            handleCreateNotification({
+              userId: post.author?._id,
+              postId: post._id,
+              type: 'comment',
+              typeId: res._id,
+            });
           }}
           resetComment={resetComment}
         />
