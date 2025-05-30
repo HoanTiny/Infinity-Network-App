@@ -34,7 +34,9 @@ function Protectedlayout() {
   return (
     <SocketProvider>
       <div>
-        <Header />
+        <div className="sticky top-0 z-10">
+          <Header />
+        </div>
         <Outlet />
       </div>
     </SocketProvider>

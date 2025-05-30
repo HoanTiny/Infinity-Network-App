@@ -2,7 +2,7 @@
 // import { PostProps, PostsApiResponse } from '@components/PostList/Post';
 import { rootApi } from './rootApi';
 import { createEntityAdapter } from '@reduxjs/toolkit';
-import { PostResponsive, RawPost } from 'src/ultil/type';
+import { PostProps, PostResponsive, RawPost } from 'src/ultil/type';
 
 const postsAdapter = createEntityAdapter({
   selectId: (post: any) => post._id,
@@ -148,6 +148,56 @@ export const postApi = rootApi.injectEndpoints({
         },
 
         providesTags: [{ type: 'POSTS' }],
+      }),
+      getPostsByAuthorId: builder.query<PostProps, any>({
+        query: ({ limit, offset, userId } = {}) => {
+          return {
+            url: `/posts/author/${userId}`,
+            params: {
+              limit,
+              offset,
+            },
+          };
+        },
+
+        //           Hàm upsertMany của Entity Adapter sẽ chuẩn hóa dữ liệu từ API (response) thành một cấu trúc chuẩn bao gồm:
+        // ids: Mảng chứa các ID duy nhất của các bài viết.
+        // entities: Một object mà mỗi key là ID của bài viết, và value là dữ liệu tương ứng của bài viết đó.
+        // transformResponse: (response: RawPost[]): PostResponsive => {
+        //   const updatedState = postsAdapter.upsertMany(initialState, response);
+        //   console.log('updatedState', updatedState);
+        //   // return updatedState.ids.map(
+        //   //   (id) => updatedState.entities[id]
+        //   // ) as PostProps[];
+
+        //   return updatedState;
+        // },
+
+        // serializeQueryArgs: () => 'allPosts',
+        // merge: (currentCache, newItems) => {
+        //   // Gộp dữ liệu từ request trước đó + với dữ liệu mới sau này, nó luôn đảm bảo
+        //   // rằng dữ liệu trong redux luôn là mới nhất và không bị trùng lặp vì
+        //   // nó đã có 1 hệ thống các ids duy nhất
+        //   // const updatedState = postsAdapter.upsertMany(
+        //   //   postsAdapter.getInitialState(currentCache),
+        //   //   newItems
+        //   // );
+
+        //   return postsAdapter.upsertMany(currentCache, newItems.entities);
+        //   // return updatedState;
+        // },
+
+        providesTags: (result: any) => {
+          return result?.posts
+            ? [
+                ...result.posts.map(({ _id }: any) => ({
+                  type: 'GET_POSTS_BY_AUTHOR_ID',
+                  id: _id,
+                })),
+                { type: 'GET_POSTS_BY_AUTHOR_ID', id: 'LIST' },
+              ]
+            : [{ type: 'GET_POSTS_BY_AUTHOR_ID', id: 'LIST' }];
+        },
       }),
       likePost: builder.mutation({
         query: (postId) => {
@@ -333,4 +383,5 @@ export const {
   useLikePostMutation,
   useUnlikePostMutation,
   useCommentPostMutation,
+  useGetPostsByAuthorIdQuery,
 } = postApi;

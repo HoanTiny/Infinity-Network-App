@@ -18,6 +18,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import Dialog from '@components/Dialog/index.tsx';
 import Loading from '@components/Loading/index.tsx';
 import SearchUser from '@components/SearchUser/index.tsx';
+import Profile from '@page/profile/Profile.tsx';
 
 const router = createBrowserRouter([
   {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
           {
             path: '/search/users',
             element: <SearchUser />,
+          },
+          {
+            path: '/user/:userId',
+            element: <Profile />,
           },
         ],
       },

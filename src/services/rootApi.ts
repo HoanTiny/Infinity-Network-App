@@ -98,7 +98,13 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
 export const rootApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryForceLogout,
-  tagTypes: ['POSTS', 'USERS', '0', 'PENDING_FRIENDS_REQUEST'],
+  tagTypes: [
+    'POSTS',
+    'USERS',
+    '0',
+    'PENDING_FRIENDS_REQUEST',
+    'GET_USER_INFO_BY_ID',
+  ],
   // refetchOnMountOrArgChange: 5,
   // refetchOnFocus: true, // Tự động gọi lại API khi cửa sổ/tab ứng dụng lấy lại trạng thái focus
   // refetchOnReconnect: true, // Tự động gọi lại API khi kết nối mạng được khôi phục

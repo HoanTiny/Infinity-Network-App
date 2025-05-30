@@ -82,8 +82,8 @@ function FriendRequest() {
   }, [refetch]);
 
   return (
-    <div className="card">
-      <div className="card__header flex justify-between items-center mb-2">
+    <div className="">
+      <div className="card__header flex justify-between items-center mb-4">
         <h3 className="font-normal text-[#ccc]">Friend Requests</h3>
         <div
           className="text-[#301ce6] cursor-pointer

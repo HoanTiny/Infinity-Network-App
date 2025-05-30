@@ -14,6 +14,13 @@ function PostCreation() {
         name="mind"
         placeholder="What's on your mind?"
         className="flex-1 rounded-[4px] border-[#DBDADE]"
+        sx={{
+          '& .MuiInputBase-formControl': {
+            borderRadius: '16px',
+            height: '42px',
+            // Add other CSS properties you need for MuiInputBase-formControl here
+          },
+        }}
         onClick={() => {
           dispatch(
             openDialog({

@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Loading from '@components/Loading';
-import { useCreateNotification, useLazyLoading } from '@hooks/index';
+import { useCreateNotification } from '@hooks/index';
 import Post from './Post';
 import {
   useCommentPostMutation,
+  useGetPostsByAuthorIdQuery,
   useLikePostMutation,
   useUnlikePostMutation,
 } from '@services/postApi';
@@ -12,13 +13,18 @@ import { useUserInfo } from '@hooks/getUserinfo';
 import { useEffect, useState } from 'react';
 import { Bounce, toast } from 'react-toastify';
 
-function PostList() {
-  const { isFetching, posts } = useLazyLoading();
+function PostList({ userId }: any) {
+  // const { isFetching, posts } = useLazyLoading();
+
+  const { data, isFetching } = useGetPostsByAuthorIdQuery({
+    limit: 10,
+    offset: 0,
+    userId,
+  });
   const [likePost] = useLikePostMutation();
   const { handleCreateNotification } = useCreateNotification();
   const [unlikePost] = useUnlikePostMutation();
   const { _id } = useUserInfo() as { _id: string };
-  console.log('posts', posts);
   const [commentPost, { isSuccess, error }] = useCommentPostMutation();
   const [resetComment, setResetComment] = useState(false);
 
@@ -54,8 +60,8 @@ function PostList() {
 
   return (
     <div>
-      {posts?.length > 0
-        ? posts.map((post: any, index) => (
+      {data?.posts && data.posts.length > 0
+        ? data.posts.map((post: any, index) => (
             <Post
               key={index}
               fullName={post.author?.fullName}
@@ -127,7 +133,7 @@ function PostList() {
               </div>
             ))
         : null}
-      {isFetching && posts?.length > 0 && <Loading />}
+      {isFetching && data?.posts && data?.posts.length > 0 && <Loading />}
     </div>
   );
 }

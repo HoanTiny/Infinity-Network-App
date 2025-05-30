@@ -36,20 +36,20 @@ const NotificationsPanel = () => {
     setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
-  useEffect(() => {
-    const handleNotification = () => {
-      refetch();
-    };
+  // useEffect(() => {
+  //   const handleNotification = () => {
+  //     refetch();
+  //   };
 
-    // Assuming you have a socket connection set up
-    socket.on('CREATE_NOTIFICATION_REQUEST', (data: any) => {
-      console.log('data', data);
-    });
+  //   // Assuming you have a socket connection set up
+  //   socket.on('CREATE_NOTIFICATION_REQUEST', (data: any) => {
+  //     console.log('data', data);
+  //   });
 
-    return () => {
-      socket.off('CREATE_NOTIFICATION_REQUEST', handleNotification);
-    };
-  }, [refetch]);
+  //   return () => {
+  //     socket.off('CREATE_NOTIFICATION_REQUEST', handleNotification);
+  //   };
+  // }, [refetch]);
 
   return (
     <Box>

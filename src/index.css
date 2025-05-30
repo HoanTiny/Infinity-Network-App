@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&family=Roboto+Slab:wght@100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  font-family: 'Public Sans Variable', sans-serif;
+  /* font-family: 'Public Sans Variable', sans-serif; */
+  font-family: 'Roboto Slab', serif;
 }
 
 @layer components {

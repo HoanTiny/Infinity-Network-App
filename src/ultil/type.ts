@@ -62,6 +62,7 @@ export interface PostProps {
   comments: Comment[];
   handleLike: (postId: string) => void;
   isLiked?: boolean;
+  posts?: PostProps[]; // nếu bạn cần truyền post object đầy đủ
 }
 
 export interface PostResponsive {

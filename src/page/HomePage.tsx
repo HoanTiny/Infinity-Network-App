@@ -12,12 +12,14 @@ function HomePage() {
   return (
     <div className="flex gap-4 p-6 bg-[#eeeeee]">
       <Sidebar />
-      <div className="flex-1">
-        <PostCreation />
-        <PostList />
+      <div className="flex-1 px-10 items-center justify-center flex">
+        <div className="w-[80%]">
+          <PostCreation />
+          <PostList />
+        </div>
       </div>
       {!mediumScreen && (
-        <div className="w-64">
+        <div className="w-80 sticky top-20 h-screen">
           <FriendRequest />
         </div>
       )}
