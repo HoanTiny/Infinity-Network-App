@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // import { PostsApiResponse } from '@components/PostList/Post';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { useCreateNotificationMutation } from '@services/notificationApi';
-import { useGetPostsQuery } from '@services/postApi';
+import {
+  useGetPostsByAuthorIdQuery,
+  useGetPostsQuery,
+} from '@services/postApi';
 import { throttle } from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PostResponsive } from 'src/ultil/type';
@@ -14,18 +18,33 @@ export function useMediumScreen() {
   return mediumScreen;
 }
 
-export const useLazyLoading = () => {
+export const useLazyLoading = ({ userId }: { userId?: string } = {}) => {
   const [offset, setOffset] = useState(0);
   const limit = 10;
   // const [posts, setPosts] = useState<PostProps[]>([]);
   const [hasMore, setHasMore] = useState(true);
   // const { data = { ids: [], entities: {} }, isFetching, isSuccess } = useGetPostsQuery({ offset, limit });
   const {
-    data = { ids: [], entities: {} } as PostResponsive,
-    isFetching,
-    refetch,
-  } = useGetPostsQuery({ offset, limit });
-  console.log('useLazyLoading', data, offset);
+    data: dataGetPostHome = { ids: [], entities: {} } as PostResponsive,
+    isFetching: isFetchingHome,
+    refetch: refetchHome,
+  } = useGetPostsQuery({ offset, limit }, { skip: !!userId });
+
+  const {
+    data: dataUserInfo = { ids: [], entities: {} } as PostResponsive,
+    isFetching: isFetchingUserInfo,
+    refetch: refetchUserInfo,
+  } = useGetPostsByAuthorIdQuery(
+    { offset, limit, userId: userId },
+    { skip: !userId }
+  );
+
+  const isFetching = userId ? isFetchingUserInfo : isFetchingHome;
+  const refetch = userId ? refetchUserInfo : refetchHome;
+  const data = userId ? dataUserInfo : dataGetPostHome;
+  console.log('useLazyLoading', data, offset, userId);
+
+  // console.log('useGetPostsByAuthorIdQuery', dataUserInfo, isFetchingUserInfo);
 
   const posts = useMemo(() => {
     if ('entities' in data) {
@@ -33,6 +52,8 @@ export const useLazyLoading = () => {
     }
     return [];
   }, [data]);
+
+  console.log('posts', posts);
   // const previousDataRef = useRef<PostProps[] | undefined>();
   const prevPostCountRef = useRef(0);
   useEffect(() => {
@@ -40,6 +61,12 @@ export const useLazyLoading = () => {
     if (!isFetching && data && hasMore) {
       const currentPostCount = Array.isArray(data) ? 0 : data.ids.length;
       const newFetchedCount = currentPostCount - prevPostCountRef.current;
+
+      if (userId) {
+        if (data.ids.length === dataUserInfo.meta?.total) {
+          setHasMore(false);
+        }
+      }
 
       console.log('currentPostCount', currentPostCount);
       console.log('newFetchedCount', newFetchedCount);
@@ -49,7 +76,7 @@ export const useLazyLoading = () => {
         prevPostCountRef.current = currentPostCount;
       }
     }
-  }, [data, isFetching, hasMore]);
+  }, [data, isFetching, hasMore, userId]);
 
   const loadMore = useCallback(async () => {
     setOffset((offset) => offset + limit);

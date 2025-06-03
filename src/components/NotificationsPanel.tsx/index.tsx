@@ -18,11 +18,11 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CircleIcon from '@mui/icons-material/FiberManualRecord';
 import { useGetNotificationsQuery } from '@services/notificationApi';
-import { useEffect, useState } from 'react';
-import { socket } from '@context/SocketProvider';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const NotificationsPanel = () => {
-  const { data, refetch } = useGetNotificationsQuery() as {
+  const { data } = useGetNotificationsQuery() as {
     data: { notifications: any[] };
     refetch: () => void;
   };
@@ -128,13 +128,18 @@ const NotificationsPanel = () => {
                       variant="body2"
                       fontWeight={note.seen ? 400 : 600}
                     >
-                      {note.author?.fullName}{' '}
-                      {note.like
-                        ? 'liked'
-                        : note.comment
-                        ? 'commented on'
-                        : 'reacted to'}{' '}
-                      your post
+                      <Link
+                        to={`/user/${note.author?._id}`}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        {note.author?.fullName}{' '}
+                        {note.like
+                          ? 'liked'
+                          : note.comment
+                          ? 'commented on'
+                          : 'reacted to'}{' '}
+                        your post
+                      </Link>
                     </Typography>
                   }
                   secondary={

@@ -12,8 +12,8 @@ import { useUserInfo } from '@hooks/getUserinfo';
 import { useEffect, useState } from 'react';
 import { Bounce, toast } from 'react-toastify';
 
-function PostList() {
-  const { isFetching, posts } = useLazyLoading();
+function PostList({ userId }: { userId?: string } = {}) {
+  const { isFetching, posts } = useLazyLoading({ userId });
   const [likePost] = useLikePostMutation();
   const { handleCreateNotification } = useCreateNotification();
   const [unlikePost] = useUnlikePostMutation();

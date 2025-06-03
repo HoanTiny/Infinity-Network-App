@@ -49,6 +49,9 @@ export interface RawPost {
   image?: string;
   imagePublicId?: string;
   __v: number;
+  limit?: number; // nếu API có trả về limit
+  offset?: number; // nếu API có trả về offset
+  total?: number; // nếu API có trả về tổng số lượng
 }
 
 // Type mà component của bạn sẽ dùng
@@ -62,12 +65,17 @@ export interface PostProps {
   comments: Comment[];
   handleLike: (postId: string) => void;
   isLiked?: boolean;
-  posts?: PostProps[]; // nếu bạn cần truyền post object đầy đủ
 }
 
 export interface PostResponsive {
   ids: string[];
   entities: Record<string, PostProps>;
+  meta?: {
+    limit: number;
+    offset: number;
+    total: number;
+  };
+  posts?: PostProps[]; // nếu bạn cần truyền post object đầy đủ
 }
 
 export interface Comment {

@@ -1,13 +1,16 @@
 import PostCreation from '@components/PostCreation';
 import { useUserInfo } from '@hooks/getUserinfo';
-import { Message, PersonAdd } from '@mui/icons-material';
+import { GroupRemove, Message, PersonAdd } from '@mui/icons-material';
 
 import { Avatar, Box } from '@mui/material';
 import { useGetUserProfileQuery } from '@services/userApi';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import GroupIcon from '@mui/icons-material/Group';
-import UserPostList from '@components/UserPostList';
+import PostList from '@components/PostList';
+import { useUnfriendRequestMutation } from '@services/friendApi';
+import { toast } from 'react-toastify';
+import { useEffect } from 'react';
 const tabsData = [
   { name: 'Bài viết', active: true },
   { name: 'Giới thiệu', active: false },
@@ -17,12 +20,48 @@ const tabsData = [
 
 const Profile = () => {
   const [tabs, setTabs] = useState(tabsData);
+  const [openPopup, setOpenPopup] = useState(false);
   const { userId } = useParams();
   const { data } = useGetUserProfileQuery(userId);
-
+  const [unFriendRequest, { isLoading: isUnFriending, isSuccess }] =
+    useUnfriendRequestMutation();
   const { _id } = useUserInfo();
 
   const myProfile = _id === userId;
+
+  const handleTogglePopup = () => {
+    setOpenPopup((prev) => !prev);
+  };
+  // Show toast notifications for unfriend actions using useEffect
+
+  useEffect(() => {
+    if (isUnFriending) {
+      toast.info('Đang hủy kết bạn...', {
+        position: 'top-right',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+    }
+  }, [isUnFriending]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success('Đã hủy kết bạn thành công!', {
+        position: 'top-right',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setOpenPopup(false);
+    }
+  }, [isSuccess]);
 
   if (!data) {
     return (
@@ -91,12 +130,27 @@ const Profile = () => {
                 <>
                   <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-1.5 rounded-lg flex items-center">
                     {data.isFriend ? (
-                      <>
+                      <div className="relative" onClick={handleTogglePopup}>
                         <GroupIcon className="mr-1" fontSize="small" />
                         <span className="text-[13px] md:text-[14px]">
                           Bạn bè
                         </span>
-                      </>
+
+                        {openPopup && (
+                          <div className="absolute top-full left-0 mt-2 w-48 bg-white shadow-lg rounded-lg p-4 z-10">
+                            {/* Hủy kết bạn */}
+                            <button
+                              className="text-sm text-black hover:underline mt-1 flex items-start gap-2"
+                              onClick={() => {
+                                unFriendRequest(userId);
+                              }}
+                            >
+                              <GroupRemove className="mr-1" fontSize="small" />
+                              Hủy kết bạn
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <>
                         <PersonAdd className="mr-1" fontSize="small" />
@@ -221,7 +275,7 @@ const Profile = () => {
             {/* Sample posts */}
             <div className="flex-1">
               {myProfile && <PostCreation />}
-              <UserPostList userId={userId} />
+              <PostList userId={userId} key={userId} />
             </div>
           </div>
         )}

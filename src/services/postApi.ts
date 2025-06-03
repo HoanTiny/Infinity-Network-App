@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // import { PostProps, PostsApiResponse } from '@components/PostList/Post';
+import { RootState } from '@redux/store';
 import { rootApi } from './rootApi';
 import { createEntityAdapter } from '@reduxjs/toolkit';
-import { PostProps, PostResponsive, RawPost } from 'src/ultil/type';
+import { PostResponsive, RawPost } from 'src/ultil/type';
+
+type CachingPair =
+  | ['getPosts', 'allPosts']
+  | ['getPostsByAuthorId', { userId: any }];
 
 const postsAdapter = createEntityAdapter({
   selectId: (post: any) => post._id,
-  sortComparer: (a: any, b: any) => {
-    const dateA = new Date(a.updatedAt).getTime() || 0;
-    const dateB = new Date(b.updatedAt).getTime() || 0;
-    return dateB - dateA;
-  },
+  sortComparer: (a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
 });
 
 const initialState = postsAdapter.getInitialState();
@@ -56,8 +58,12 @@ export const postApi = rootApi.injectEndpoints({
 
         async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
           console.log('cvh', args);
-          const store = getState() as unknown as {
-            auth: { userInfo: { _id: string; fullName: string } };
+          const store = getState() as RootState;
+          // Ensure userInfo is typed correctly
+          const userInfo = store.auth.userInfo as {
+            _id: string;
+            fullName: string;
+            notifications?: any[];
           };
           const tempId = crypto.randomUUID();
           const newPost = {
@@ -67,40 +73,68 @@ export const postApi = rootApi.injectEndpoints({
             content: args.get('content'),
             author: {
               notifications: [],
-              _id: store.auth.userInfo._id,
-              fullName: store.auth.userInfo.fullName,
+              _id: userInfo._id,
+              fullName: userInfo.fullName,
             },
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             __v: 0,
           };
 
-          const patchResult = dispatch(
-            postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
-              postsAdapter.addOne(draft, newPost as any);
-            })
+          const userProfilePostsArgs = postApi.util.selectCachedArgsForQuery(
+            store,
+            'getPostsByAuthorId'
           );
+
+          const patchResults = [] as any[];
+          const cachingPairs: CachingPair[] = [
+            ...userProfilePostsArgs.map(
+              (arg: any) =>
+                ['getPostsByAuthorId', { userId: arg.userId }] as CachingPair
+            ),
+            ['getPosts', 'allPosts'],
+          ];
+
+          cachingPairs.forEach(([endpoint, key]) => {
+            const patchResult = dispatch(
+              postApi.util.updateQueryData(endpoint, key, (draft) => {
+                postsAdapter.addOne(draft, newPost as any);
+                postsAdapter.addOne(draft, newPost as any);
+              })
+            );
+            patchResults.push(patchResult);
+          });
           try {
             const { data } = await queryFulfilled;
             console.log('data333', { data });
-            dispatch(
-              postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
-                // const index = draft.ids.findIndex((id) => {
-                //   const entity = draft.entities[id];
-                //   return entity && '_id' in entity && entity._id === tempId;
-                // });
-                // if (index !== -1) {
-                //   if (draft.ids[index]) {
-                //     draft.entities[draft.ids[index]] = data;
-                //   }
-                // }
+            cachingPairs.forEach(([endpoint, key]) => {
+              dispatch(
+                postApi.util.updateQueryData(endpoint, key, (draft) => {
+                  // const index = draft.ids.findIndex((id) => {
+                  //   const entity = draft.entities[id];
+                  //   return entity && '_id' in entity && entity._id === tempId;
+                  // });
+                  // if (index !== -1) {
+                  //   if (draft.ids[index]) {
+                  //     draft.entities[draft.ids[index]] = data;
+                  //   }
+                  // }
 
-                postsAdapter.removeOne(draft, tempId as any);
-                postsAdapter.addOne(draft, data as any);
-              })
-            );
+                  console.log(
+                    'Draft before removing tempId:',
+                    JSON.parse(JSON.stringify(draft)),
+                    tempId
+                  );
+
+                  postsAdapter.removeOne(draft, tempId as any);
+                  postsAdapter.addOne(draft, data as any);
+                })
+              );
+            });
           } catch {
-            patchResult.undo();
+            patchResults.forEach((patchResult) => {
+              patchResult.undo();
+            });
 
             /**
              * Alternatively, on failure you can invalidate the corresponding cache tags
@@ -110,6 +144,7 @@ export const postApi = rootApi.injectEndpoints({
           }
         },
       }),
+
       getPosts: builder.query<PostResponsive, any>({
         query: ({ limit, offset } = {}) => {
           return {
@@ -120,6 +155,7 @@ export const postApi = rootApi.injectEndpoints({
             },
           };
         },
+        keepUnusedDataFor: 0, // Không giữ dữ liệu trong cache quá lâu
         //           Hàm upsertMany của Entity Adapter sẽ chuẩn hóa dữ liệu từ API (response) thành một cấu trúc chuẩn bao gồm:
         // ids: Mảng chứa các ID duy nhất của các bài viết.
         // entities: Một object mà mỗi key là ID của bài viết, và value là dữ liệu tương ứng của bài viết đó.
@@ -149,7 +185,7 @@ export const postApi = rootApi.injectEndpoints({
 
         providesTags: [{ type: 'POSTS' }],
       }),
-      getPostsByAuthorId: builder.query<PostProps, any>({
+      getPostsByAuthorId: builder.query<PostResponsive, any>({
         query: ({ limit, offset, userId } = {}) => {
           return {
             url: `/posts/author/${userId}`,
@@ -160,32 +196,51 @@ export const postApi = rootApi.injectEndpoints({
           };
         },
 
+        keepUnusedDataFor: 0, // Giữ dữ liệu trong cache trong n giây
+
         //           Hàm upsertMany của Entity Adapter sẽ chuẩn hóa dữ liệu từ API (response) thành một cấu trúc chuẩn bao gồm:
         // ids: Mảng chứa các ID duy nhất của các bài viết.
         // entities: Một object mà mỗi key là ID của bài viết, và value là dữ liệu tương ứng của bài viết đó.
-        // transformResponse: (response: RawPost[]): PostResponsive => {
-        //   const updatedState = postsAdapter.upsertMany(initialState, response);
-        //   console.log('updatedState', updatedState);
-        //   // return updatedState.ids.map(
-        //   //   (id) => updatedState.entities[id]
-        //   // ) as PostProps[];
+        transformResponse: (response: {
+          posts: RawPost[];
+          limit?: number;
+          offset?: number;
+          total?: number;
+        }): PostResponsive => {
+          const updatedState = postsAdapter.upsertMany(
+            initialState,
+            response.posts
+          );
+          console.log('updatedState', updatedState);
+          // return updatedState.ids.map(
+          //   (id) => updatedState.entities[id]
+          // ) as PostProps[];
 
-        //   return updatedState;
-        // },
+          return {
+            ...updatedState,
+            meta: {
+              limit: response.limit || 10, // Default value if limit is undefined
+              offset: response.offset || 0, // Default value if offset is undefined
+              total: response.total || response.posts.length, // Default to posts length if total is undefined
+            },
+          };
+        },
 
-        // serializeQueryArgs: () => 'allPosts',
-        // merge: (currentCache, newItems) => {
-        //   // Gộp dữ liệu từ request trước đó + với dữ liệu mới sau này, nó luôn đảm bảo
-        //   // rằng dữ liệu trong redux luôn là mới nhất và không bị trùng lặp vì
-        //   // nó đã có 1 hệ thống các ids duy nhất
-        //   // const updatedState = postsAdapter.upsertMany(
-        //   //   postsAdapter.getInitialState(currentCache),
-        //   //   newItems
-        //   // );
+        serializeQueryArgs: ({ queryArgs }) => ({
+          userId: queryArgs.userId,
+        }),
+        merge: (currentCache, newItems) => {
+          // Gộp dữ liệu từ request trước đó + với dữ liệu mới sau này, nó luôn đảm bảo
+          // rằng dữ liệu trong redux luôn là mới nhất và không bị trùng lặp vì
+          // nó đã có 1 hệ thống các ids duy nhất
+          // const updatedState = postsAdapter.upsertMany(
+          //   postsAdapter.getInitialState(currentCache),
+          //   newItems
+          // );
 
-        //   return postsAdapter.upsertMany(currentCache, newItems.entities);
-        //   // return updatedState;
-        // },
+          return postsAdapter.upsertMany(currentCache, newItems.entities);
+          // return updatedState;
+        },
 
         providesTags: (result: any) => {
           return result?.posts
@@ -209,59 +264,84 @@ export const postApi = rootApi.injectEndpoints({
         invalidatesTags: ['POSTS'],
         async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
           console.log('cvh', args);
-          const store = getState() as unknown as {
-            auth: { userInfo: { _id: string; fullName: string } };
-          };
+          // const store = getState() as unknown as {
+          //   auth: { userInfo: { _id: string; fullName: string } };
+          // };
+          const store = getState() as RootState;
           const tempId = crypto.randomUUID();
-          const newLike = {
-            author: {
-              _id: store.auth.userInfo._id,
-              fullName: store.auth.userInfo.fullName,
-            },
-            _id: tempId,
+          const userInfo = store.auth.userInfo as {
+            _id: string;
+            fullName: string;
+            notifications?: any[];
           };
 
-          const patchResult = dispatch(
-            postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
-              const currentLike = draft.ids
-                .map((id) => draft.entities[id])
-                .find((post: any) => post?._id === args);
-              console.log('currentLike', currentLike);
-              if (currentLike) {
-                currentLike.likes.push(newLike as any);
-              }
-            })
+          const userProfilePostsArgs = postApi.util.selectCachedArgsForQuery(
+            store,
+            'getPostsByAuthorId'
           );
-          try {
-            const { data } = await queryFulfilled;
-            console.log('data333', { data });
 
-            dispatch(
-              postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
-                const currentPost = draft.ids
-                  .map((id) => draft.entities[id])
-                  .find((post: any) => post?._id === args);
-                console.log('currentPost', currentPost);
+          const patchResults = [] as any[];
+          const cachingPairs: CachingPair[] = [
+            ...userProfilePostsArgs.map(
+              (arg: any) =>
+                ['getPostsByAuthorId', { userId: arg.userId }] as CachingPair
+            ),
+            ['getPosts', 'allPosts'],
+          ];
+          console.log({ cachingPairs });
+
+          cachingPairs.forEach(([endpoint, key]) => {
+            const patchResult = dispatch(
+              rootApi.util.updateQueryData(endpoint, key, (draft) => {
+                console.log({ endpoint, key, draft });
+                const currentPost = draft.entities[args];
                 if (currentPost) {
-                  let currentLike = currentPost.likes.find(
-                    (like: any) => like._id === tempId
-                  ) as any;
-                  if (currentLike) {
-                    currentLike = {
-                      author: {
-                        _id: data.author._id,
-                        fullName: data.author.fullName,
-                      },
-                      createdAt: data.createdAt,
-                      updatedAt: data.updatedAt,
-                      _id: data._id,
-                    };
-                  }
+                  currentPost.likes.push({
+                    author: {
+                      _id: userInfo._id,
+                      fullName: userInfo.fullName,
+                    },
+                    _id: tempId,
+                  });
                 }
               })
             );
-          } catch {
-            patchResult.undo();
+
+            patchResults.push(patchResult);
+          });
+
+          try {
+            const { data } = await queryFulfilled;
+
+            cachingPairs.forEach(([endpoint, key]) => {
+              dispatch(
+                rootApi.util.updateQueryData(endpoint, key, (draft) => {
+                  const currentPost = draft.entities[args];
+                  if (currentPost) {
+                    currentPost.likes = currentPost.likes.map((like) => {
+                      if (like._id === tempId) {
+                        return {
+                          author: {
+                            _id: store.auth.userInfo._id,
+                            fullName: store.auth.userInfo.fullName,
+                          },
+                          createdAt: data.createdAt,
+                          updatedAt: data.updatedAt,
+                          _id: data._id,
+                        };
+                      }
+
+                      return like;
+                    });
+                  }
+                })
+              );
+            });
+          } catch (err) {
+            console.log({ err });
+            patchResults.forEach((patchResult) => {
+              patchResult.undo();
+            });
           }
         },
       }),
@@ -318,16 +398,18 @@ export const postApi = rootApi.injectEndpoints({
         async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
           // console.log('first', arg);
 
-          const store = getState() as unknown as {
-            auth: { userInfo: { _id: string; fullName: string } };
+          const store = getState() as RootState;
+          const userInfo = store.auth.userInfo as {
+            _id: string;
+            fullName: string;
+            notifications?: any[];
           };
-
           const optimisticComment = {
             _id: crypto.randomUUID(),
             comment: arg.comment,
             author: {
-              _id: store.auth.userInfo._id,
-              fullName: store.auth.userInfo.fullName,
+              _id: userInfo._id,
+              fullName: userInfo.fullName,
             },
             post: arg.postId,
             createdAt: new Date().toISOString(),
@@ -335,41 +417,62 @@ export const postApi = rootApi.injectEndpoints({
             __v: 0,
           };
 
-          const patchResult = dispatch(
-            postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
-              const currentPost = draft.ids
-                .map((id) => draft.entities[id])
-                .find((post: any) => post?._id === arg.postId);
-
-              if (currentPost) {
-                currentPost.comments.push(optimisticComment as any);
-              }
-            })
+          const userProfilePostsArgs = postApi.util.selectCachedArgsForQuery(
+            store,
+            'getPostsByAuthorId'
           );
+
+          const patchResults = [] as any[];
+          const cachingPairs = [
+            ...userProfilePostsArgs.map((arg: any) => [
+              'getPostsByAuthorId',
+              { userId: arg.userId },
+            ]),
+            ['getPosts', 'allPosts'],
+          ];
+
+          cachingPairs.forEach(([endpoint, key]) => {
+            const patchResult = dispatch(
+              postApi.util.updateQueryData(endpoint, key, (draft) => {
+                const currentPost = draft.ids
+                  .map((id) => draft.entities[id])
+                  .find((post: any) => post?._id === arg.postId);
+
+                if (currentPost) {
+                  currentPost.comments.push(optimisticComment as any);
+                }
+              })
+            );
+            patchResults.push(patchResult);
+          });
 
           // console.log('patchResult', patchResult);
 
           try {
             const { data } = await queryFulfilled;
             // console.log('Comment successful', data);
-            dispatch(
-              postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
-                const currentPost = draft.ids
-                  .map((id) => draft.entities[id])
-                  .find((post: any) => post?._id === arg.postId);
-                if (currentPost) {
-                  const index = currentPost.comments.findIndex(
-                    (comment: any) => comment._id === optimisticComment._id
-                  );
-                  if (index !== -1) {
-                    currentPost.comments[index] = data;
+            cachingPairs.forEach(([endpoint, key]) => {
+              dispatch(
+                postApi.util.updateQueryData(endpoint, key, (draft) => {
+                  const currentPost = draft.ids
+                    .map((id) => draft.entities[id])
+                    .find((post: any) => post?._id === arg.postId);
+                  if (currentPost) {
+                    const index = currentPost.comments.findIndex(
+                      (comment: any) => comment._id === optimisticComment._id
+                    );
+                    if (index !== -1) {
+                      currentPost.comments[index] = data;
+                    }
                   }
-                }
-              })
-            );
+                })
+              );
+            });
           } catch (error) {
             console.log('error', error);
-            patchResult.undo();
+            patchResults.forEach((patchResult) => {
+              patchResult.undo();
+            });
           }
         },
       }),
