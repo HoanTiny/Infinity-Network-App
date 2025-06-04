@@ -18,7 +18,7 @@ import {
 import { onpenDrawer } from '@redux/slice/settingSlice';
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 function Header() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const navigate = useNavigate();
@@ -65,7 +65,9 @@ function Header() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+      <MenuItem onClick={handleMenuClose}>
+        <Link to={`/user/${infoUser._id}`}>Profile</Link>
+      </MenuItem>
       <MenuItem
         onClick={() => {
           logout();

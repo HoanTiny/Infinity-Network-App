@@ -51,7 +51,7 @@ function SocketProvider({ children }: SocketProviderProps) {
 
   useEffect(() => {
     socket.on('CREATE_NOTIFICATION_REQUEST', (data: any) => {
-      console.log('data', data);
+      console.log('datacheck 544444444444', data);
       dispatch(
         notificationsApi.util.updateQueryData(
           'getNotifications',
@@ -63,6 +63,7 @@ function SocketProvider({ children }: SocketProviderProps) {
       );
 
       if (data?.author?._id !== infoUser?._id) {
+        console.log('zô toast', data);
         toast.info(
           <div
             style={{

@@ -1,6 +1,10 @@
 // import { StrictMode } from 'react';
 import './index.css';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from 'react-router-dom';
 import RootLayout from '@page/RootLayout';
 import HomePage from '@page/HomePage';
 import AuthLayout from '@page/auth/AuthLayout';
@@ -19,6 +23,8 @@ import Dialog from '@components/Dialog/index.tsx';
 import Loading from '@components/Loading/index.tsx';
 import SearchUser from '@components/SearchUser/index.tsx';
 import Profile from '@page/profile/Profile.tsx';
+import ListFriends from '@page/profile/FriendList.tsx';
+import About from '@page/profile/About.tsx';
 
 const router = createBrowserRouter([
   {
@@ -38,6 +44,25 @@ const router = createBrowserRouter([
           {
             path: '/user/:userId',
             element: <Profile />,
+            children: [
+              {
+                index: true,
+                element: <Navigate to="about" replace />,
+              },
+              {
+                path: 'friends',
+                element: <ListFriends />,
+              },
+              {
+                path: 'about',
+                element: <About />,
+              },
+
+              {
+                path: 'photos',
+                element: <div>Photos</div>,
+              },
+            ],
           },
         ],
       },

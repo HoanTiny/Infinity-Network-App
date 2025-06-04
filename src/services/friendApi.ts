@@ -13,7 +13,10 @@ export const friendApi = rootApi.injectEndpoints({
           },
         }),
         invalidatesTags: (result, error, args) => {
-          return [{ type: 'USERS', id: args }];
+          return [
+            { type: 'USERS', id: args },
+            { type: 'GET_USER_INFO_BY_ID', id: result?._id },
+          ];
         },
       }),
 
@@ -80,6 +83,20 @@ export const friendApi = rootApi.injectEndpoints({
               ]
             : [{ type: 'PENDING_FRIENDS_REQUEST', id: 'LIST' }],
       }),
+      getUserAllFriends: builder.query<
+        any,
+        { limit?: number; offset?: number }
+      >({
+        query: ({ limit, offset } = {}) => {
+          return {
+            url: '/friends',
+            params: {
+              limit,
+              offset,
+            },
+          };
+        },
+      }),
     };
   },
 });
@@ -90,4 +107,5 @@ export const {
   useUnfriendRequestMutation,
   useRequestFriendMutation,
   useGetPendingFriendsRequestQuery,
+  useGetUserAllFriendsQuery,
 } = friendApi;

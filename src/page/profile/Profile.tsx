@@ -1,21 +1,34 @@
-import PostCreation from '@components/PostCreation';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useUserInfo } from '@hooks/getUserinfo';
-import { GroupRemove, Message, PersonAdd } from '@mui/icons-material';
+import {
+  CheckBox,
+  GroupRemove,
+  Message,
+  PersonAdd,
+  PersonSearch,
+} from '@mui/icons-material';
 
-import { Avatar, Box } from '@mui/material';
+import { Avatar, Box, CircularProgress } from '@mui/material';
 import { useGetUserProfileQuery } from '@services/userApi';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
 import GroupIcon from '@mui/icons-material/Group';
-import PostList from '@components/PostList';
-import { useUnfriendRequestMutation } from '@services/friendApi';
+import {
+  useAcceptFriendRequestMutation,
+  useCancelFriendRequestMutation,
+  useGetPendingFriendsRequestQuery,
+  useRequestFriendMutation,
+  useUnfriendRequestMutation,
+} from '@services/friendApi';
 import { toast } from 'react-toastify';
 import { useEffect } from 'react';
+import { socket } from '@context/SocketProvider';
+import Loading from '@components/Loading';
 const tabsData = [
-  { name: 'Bài viết', active: true },
-  { name: 'Giới thiệu', active: false },
-  { name: 'Bạn bè', active: false },
-  { name: 'Ảnh', active: false },
+  { name: 'Bài viết', active: true, label: 'about' },
+  // { name: 'Giới thiệu', active: false, label: 'introduce' },
+  { name: 'Bạn bè', active: false, label: 'friends' },
+  { name: 'Ảnh', active: false, label: 'photos' },
 ];
 
 const Profile = () => {
@@ -26,8 +39,47 @@ const Profile = () => {
   const [unFriendRequest, { isLoading: isUnFriending, isSuccess }] =
     useUnfriendRequestMutation();
   const { _id } = useUserInfo();
+  const { data: dataFriendsRequest = [], refetch } =
+    useGetPendingFriendsRequestQuery();
+
+  const [aceptFriendRequest, { isLoading: isAccepting }] =
+    useAcceptFriendRequestMutation();
+  const [cancelFriendRequest, { isLoading: isCanceling }] =
+    useCancelFriendRequestMutation();
+  const [requestFriend, { isLoading }] = useRequestFriendMutation();
+
+  const location = useLocation();
+  // const currentTab = tabs.find((tab) => location.pathname.includes(tab.label));
+  // Lấy ra path sau userId, ví dụ: /user/123/friends => friends
+  const currentTab =
+    location.pathname.split(`/user/${userId}/`)[1]?.split('/')[0] || '';
+
+  // Cập nhật trạng thái active cho tab hiện tại khi location.pathname hoặc userId thay đổi
+  useEffect(() => {
+    const updatedTabs = tabs.map((tab) => ({
+      ...tab,
+      active: tab.label === currentTab,
+    }));
+    setTabs(updatedTabs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, userId]);
+
+  console.log('dataFriendsRequest', dataFriendsRequest, data);
+
+  useEffect(() => {
+    socket.on('friendRequestReceived', (dataFriendsRequest) => {
+      console.log('[friendRequestReceived]', { dataFriendsRequest });
+      refetch();
+    });
+
+    return () => {
+      socket.off('friendRequestReceived');
+    };
+  }, [refetch]);
 
   const myProfile = _id === userId;
+
+  console.log('userId', userId);
 
   const handleTogglePopup = () => {
     setOpenPopup((prev) => !prev);
@@ -153,10 +205,64 @@ const Profile = () => {
                       </div>
                     ) : (
                       <>
-                        <PersonAdd className="mr-1" fontSize="small" />
-                        <span className="text-[13px] md:text-[14px]">
-                          Kết bạn
-                        </span>
+                        {data.requestSent ? (
+                          <div
+                            className="flex items-center gap-2 text-white"
+                            onClick={() => cancelFriendRequest(userId)}
+                          >
+                            <CheckBox className="mr-1" fontSize="small" />
+                            <span className="text-[13px] md:text-[14px]">
+                              Đã gửi lời mời
+                            </span>
+                          </div>
+                        ) : dataFriendsRequest.some(
+                            (dt: any) => dt._id === userId
+                          ) ? (
+                          <div
+                            className="friend-item-request__info__action flex gap-2 relative"
+                            onClick={handleTogglePopup}
+                          >
+                            <PersonSearch className="mr-1" fontSize="small" />
+                            Phản hồi
+                            {openPopup && (
+                              <div className="absolute flex flex-col gap-2 justify-start items-start  top-full left-10  mt-2 w-48 bg-white text-black shadow-lg p-1 rounded-lg z-10">
+                                {/* Hủy kết bạn */}
+                                <button
+                                  className="hover:bg-gray-300 w-full text-left py-2 px-4"
+                                  onClick={() => aceptFriendRequest(userId)}
+                                >
+                                  {isAccepting && <Loading />}
+                                  Xác nhận
+                                </button>
+                                <button
+                                  className="hover:bg-gray-300 w-full text-left py-2 px-4"
+                                  onClick={() => cancelFriendRequest(userId)}
+                                >
+                                  {isCanceling && <Loading />}
+                                  Xóa lời mời
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div
+                            onClick={async () => {
+                              await requestFriend(userId).unwrap();
+                              socket.emit('friendRequestSent', {
+                                receiverId: userId,
+                              });
+                            }}
+                          >
+                            <PersonAdd className="mr-1" fontSize="small" />
+                            <span className="text-[13px] md:text-[14px]">
+                              {isLoading ? (
+                                <CircularProgress size={20} className="mr-2" />
+                              ) : (
+                                <span>Kết bạn</span>
+                              )}
+                            </span>
+                          </div>
+                        )}
                       </>
                     )}
                   </button>
@@ -168,6 +274,33 @@ const Profile = () => {
               )}
             </div>
           </div>
+        </Box>
+
+        <Box className="mt-4">
+          {/* Accept friendRequest */}
+          {!myProfile &&
+            dataFriendsRequest.some((dt: any) => dt._id === userId) && (
+              <div className=" bg-[#e9e9e9] rounded-lg p-4 z-20 mb-2 flex items-center justify-between border-none">
+                <span className="text-black font-medium">
+                  {data?.fullName} đã gửi cho bạn lời mời kết bạn
+                </span>
+                <div className="flex gap-2 ml-4">
+                  <button
+                    className="bg-blue-600 text-white p-2 rounded-lg"
+                    onClick={() => aceptFriendRequest(userId)}
+                  >
+                    Chấp nhận lời mời
+                  </button>
+                  <button
+                    className="bg-gray-600 text-white  p-2 rounded-lg"
+                    // Xử lý xóa lời mời kết bạn ở đây
+                    onClick={() => cancelFriendRequest(userId)}
+                  >
+                    Xóa lời mời
+                  </button>
+                </div>
+              </div>
+            )}
         </Box>
 
         {/* Navigation menu */}
@@ -188,18 +321,29 @@ const Profile = () => {
                   );
                 }}
               >
-                {tab.name}
+                <Link
+                  to={`/user/${userId}/${tab.label.toLowerCase()}`}
+                  className="flex items-center gap-2"
+                >
+                  {tab.name}
+                </Link>
               </li>
             ))}
           </ul>
         </Box>
       </Box>
 
+      <Outlet
+        context={{
+          userId: userId,
+          myProfile: myProfile,
+        }}
+      />
+
       {/* Content based on active tab */}
-      <div className="mt-4">
+      {/* <div className="mt-4">
         {tabs.find((tab) => tab.active)?.name === 'Bài viết' && (
           <div className=" flex flex-col md:flex-row gap-6">
-            {/* Tab left  */}
             <div className="w-full sm:w-[40%] bg-light-100 flex flex-col gap-4 ">
               <div className="card">
                 <h3 className="text-lg font-bold mb-2">Introduction</h3>
@@ -209,10 +353,6 @@ const Profile = () => {
                   Phasellus faucibus mollis pharetra. Proin blandit ac massa sed
                   rhoncus
                 </p>
-                {/* <p>
-                  <LocationCity className="inline-block mr-1" />
-                  Hà Nội City
-                </p> */}
               </div>
               <div className="card">
                 <div className="flex justify-between items-center mb-3">
@@ -272,7 +412,6 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Sample posts */}
             <div className="flex-1">
               {myProfile && <PostCreation />}
               <PostList userId={userId} key={userId} />
@@ -303,7 +442,7 @@ const Profile = () => {
             <p>Chưa có video nào.</p>
           </Box>
         )}
-      </div>
+      </div> */}
     </Box>
   );
 };

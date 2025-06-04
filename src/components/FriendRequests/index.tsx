@@ -8,6 +8,7 @@ import {
   useGetPendingFriendsRequestQuery,
 } from '@services/friendApi';
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 type FriendItemRequestProps = {
   fullName: string;
   id: string;
@@ -30,7 +31,12 @@ const FriendItemRequest = ({ fullName, id }: FriendItemRequestProps) => {
       </div>
 
       <div className="friend-item-request__info flex flex-col gap-1">
-        <div className="friend-item-request__info__name">{fullName}</div>
+        <Link
+          to={`/user/${id}`}
+          className="friend-item-request__info__name hover:underline text-[15px] font-semibold"
+        >
+          {fullName}
+        </Link>
         <div className="friend-item-request__info__mutual text-[#4B465C] text-[13px] font-w">
           2 mutual friends
         </div>
@@ -68,7 +74,7 @@ const FriendItemRequest = ({ fullName, id }: FriendItemRequestProps) => {
 function FriendRequest() {
   const { data = [], isFetching, refetch } = useGetPendingFriendsRequestQuery();
 
-  console.log('data', data);
+  console.log('useGetPendingFriendsRequestQuery', data);
 
   useEffect(() => {
     socket.on('friendRequestReceived', (data) => {

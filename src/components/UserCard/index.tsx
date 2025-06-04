@@ -12,6 +12,7 @@ import {
   useUnfriendRequestMutation,
 } from '@services/friendApi';
 import { UserMinus } from '@components/Icon';
+import { Link } from 'react-router-dom';
 
 export type UserCardProps = {
   isFriend: boolean;
@@ -140,7 +141,9 @@ function UserCard({
           {fullName[0]}
         </Avatar>
       )}
-      <h3>{fullName}</h3>
+      <Link to={`/user/${id}`}>
+        <h3>{fullName}</h3>
+      </Link>
       <div className="flex gap-2">
         <img src="/icons/friends.svg" alt="friends" />
         <span>100 friends</span>
