@@ -2,12 +2,16 @@
 import { MoreHoriz } from '@mui/icons-material';
 import { Avatar } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import { useGetUserAllFriendsQuery } from '@services/friendApi';
+import { useGetUserAllFriendsByIdQuery } from '@services/friendApi';
 import { useState } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
 
 const ListFriends = () => {
   const [popup, setPopup] = useState<string | false>(false);
-  const { data } = useGetUserAllFriendsQuery({
+  const { userId } = useOutletContext<{ userId: string }>();
+
+  const { data } = useGetUserAllFriendsByIdQuery({
+    userId: userId,
     offset: 0,
     limit: 10,
   });
@@ -36,7 +40,9 @@ const ListFriends = () => {
                 sx={{ width: 80, height: 80 }}
               ></Avatar>
               <div className="flex-1">
-                <h2 className="text-md">{friend.fullName}</h2>
+                <Link to={`/user/${friend._id}`}>
+                  <h2 className="text-md">{friend.fullName}</h2>
+                </Link>
                 <p className="text-sm text-gray-700">111 bạn chug</p>
               </div>
               {/* More */}
@@ -53,7 +59,7 @@ const ListFriends = () => {
                   }`}
                 >
                   <button className="text-sm text-gray-700 hover:text-blue-500">
-                    Xem trang cá nhân
+                    <Link to={`/user/${friend._id}`}>Xem trang cá nhân</Link>
                   </button>
                   <button className="text-sm text-gray-700 hover:text-blue-500">
                     Gửi tin nhắn

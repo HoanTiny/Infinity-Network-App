@@ -83,6 +83,7 @@ export const friendApi = rootApi.injectEndpoints({
               ]
             : [{ type: 'PENDING_FRIENDS_REQUEST', id: 'LIST' }],
       }),
+
       getUserAllFriends: builder.query<
         any,
         { limit?: number; offset?: number }
@@ -97,6 +98,29 @@ export const friendApi = rootApi.injectEndpoints({
           };
         },
       }),
+
+      getUserAllFriendsById: builder.query<
+        any,
+        { userId: string; offset?: number; limit?: number }
+      >({
+        query: ({ userId, offset, limit }) => ({
+          url: `/users/${userId}/friends`,
+          params: {
+            offset,
+            limit,
+          },
+        }),
+        providesTags: (result) =>
+          result?.friends
+            ? [
+                ...result.friends.map(({ _id }: any) => ({
+                  type: 'GET_FRIENDS',
+                  id: _id,
+                })),
+                { type: 'GET_FRIENDS', id: 'LIST' },
+              ]
+            : [{ type: 'GET_FRIENDS', id: 'LIST' }],
+      }),
     };
   },
 });
@@ -108,4 +132,5 @@ export const {
   useRequestFriendMutation,
   useGetPendingFriendsRequestQuery,
   useGetUserAllFriendsQuery,
+  useGetUserAllFriendsByIdQuery,
 } = friendApi;

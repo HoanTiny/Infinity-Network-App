@@ -1,92 +1,17 @@
 // import { StrictMode } from 'react';
 import './index.css';
-import {
-  createBrowserRouter,
-  Navigate,
-  RouterProvider,
-} from 'react-router-dom';
-import RootLayout from '@page/RootLayout';
-import HomePage from '@page/HomePage';
-import AuthLayout from '@page/auth/AuthLayout';
-import RegisterPage from '@page/auth/RegisterPage';
-import LoginPage from '@page/auth/LoginPage';
-import OTPVerifyPage from '@page/auth/OTPVerifyPage';
+import { RouterProvider } from 'react-router-dom';
+
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { persistor, store } from '@redux/store';
 import { ThemeProvider } from '@mui/material';
 import theme from './configs/muiConfigs.ts';
 // import ModalProvider from '@context/ModalProvider';
-import Protectedlayout from '@page/ProtectedLayout.tsx';
-import { PersistGate } from 'redux-persist/integration/react';
 import Dialog from '@components/Dialog/index.tsx';
 import Loading from '@components/Loading/index.tsx';
-import SearchUser from '@components/SearchUser/index.tsx';
-import Profile from '@page/profile/Profile.tsx';
-import ListFriends from '@page/profile/FriendList.tsx';
-import About from '@page/profile/About.tsx';
-
-const router = createBrowserRouter([
-  {
-    element: <RootLayout />,
-    children: [
-      {
-        element: <Protectedlayout />,
-        children: [
-          {
-            path: '/',
-            element: <HomePage />,
-          },
-          {
-            path: '/search/users',
-            element: <SearchUser />,
-          },
-          {
-            path: '/user/:userId',
-            element: <Profile />,
-            children: [
-              {
-                index: true,
-                element: <Navigate to="about" replace />,
-              },
-              {
-                path: 'friends',
-                element: <ListFriends />,
-              },
-              {
-                path: 'about',
-                element: <About />,
-              },
-
-              {
-                path: 'photos',
-                element: <div>Photos</div>,
-              },
-            ],
-          },
-        ],
-      },
-
-      {
-        element: <AuthLayout />,
-        children: [
-          {
-            path: '/register',
-            element: <RegisterPage />,
-          },
-          {
-            path: '/login',
-            element: <LoginPage />,
-          },
-          {
-            path: 'verify',
-            element: <OTPVerifyPage />,
-          },
-        ],
-      },
-    ],
-  },
-]);
+import { PersistGate } from 'redux-persist/integration/react';
+import router from './route.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>

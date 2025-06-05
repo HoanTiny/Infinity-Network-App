@@ -4,6 +4,8 @@ const initialState = {
   accessToken: null,
   refreshToken: null,
   userInfo: {},
+  image: '',
+  coverImage: '',
 };
 
 export const authSlice = createSlice({
@@ -22,8 +24,17 @@ export const authSlice = createSlice({
     saveUserinfo: (state, action) => {
       state.userInfo = action.payload;
     },
+
+    saveImage: (state, action) => {
+      state.image = action.payload;
+    },
+
+    saveCoverImage: (state, action) => {
+      state.coverImage = action.payload;
+    },
   },
 });
 
-export const { login, logOut, saveUserinfo } = authSlice.actions;
+export const { login, logOut, saveUserinfo, saveCoverImage, saveImage } =
+  authSlice.actions;
 export default authSlice.reducer;

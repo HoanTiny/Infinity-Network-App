@@ -3,11 +3,11 @@ import { CircularProgress, Button as MuiButton } from '@mui/material';
 
 interface ButtonProps {
   isLoading: boolean;
-  onClick: () => void;
-  icon: any;
+  onClick?: () => void;
+  icon?: any;
   variant: 'contained' | 'outlined';
   size: 'small' | 'medium' | 'large';
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
   sx?: any;
 }

@@ -11,7 +11,34 @@ export const userApi = rootApi.injectEndpoints({
         { type: 'GET_USER_INFO_BY_ID', id: result?._id },
       ],
     }),
+
+    uploadPhotoUser: builder.mutation({
+      query: (formData) => ({
+        url: `/users/upload-photo`,
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: [
+        { type: 'GET_AUTH_USER' },
+        { type: 'GET_USER_INFO_BY_ID' },
+      ],
+    }),
+
+    updateUserProfile: builder.mutation({
+      query: (payload) => {
+        return {
+          url: '/users/update-profile',
+          method: 'PATCH',
+          body: payload,
+        };
+      },
+      invalidatesTags: [{ type: 'GET_AUTH_USER' }],
+      // invalidatesTags: (result, error, args) => [
+      //   { type: "USERS", id: args },
+      //   { type: "PENDING_FRIEND_REQUEST", id: args },
+      // ],
+    }),
   }),
 });
 
-export const { useGetUserProfileQuery } = userApi;
+export const { useGetUserProfileQuery, useUploadPhotoUserMutation } = userApi;

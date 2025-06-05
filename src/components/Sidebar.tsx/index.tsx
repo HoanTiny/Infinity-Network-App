@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { useUserInfo } from '@hooks/getUserinfo';
 import { useMediumScreen } from '@hooks/index';
 import { Close } from '@mui/icons-material';
 import { Drawer, IconButton, Typography, Avatar } from '@mui/material';
@@ -11,8 +12,9 @@ function Sidebar() {
   const mediumScreen = useMediumScreen();
   const location = useLocation();
   const isShowDrawer = useSelector((store: any) => store.settings.IsShowDrawer);
+  const userInfo = useUserInfo();
 
-  console.log('store settings: ', isShowDrawer);
+  console.log('store settings: ', userInfo);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -43,7 +45,8 @@ function Sidebar() {
           {/* User Profile Section */}
           <div className="px-2 mb-4">
             <Link
-              to="/profile"
+              to={`/user/${userInfo?._id}`}
+              state={{ from: 'sidebar' }}
               className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 group"
             >
               <Avatar
@@ -52,7 +55,7 @@ function Sidebar() {
                 className="w-9 h-9 group-hover:scale-105 transition-transform duration-200"
               />
               <Typography className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
-                Your Name
+                {userInfo?.fullName || 'Your Name'}
               </Typography>
             </Link>
           </div>
@@ -156,15 +159,17 @@ function Sidebar() {
                   }`}
                 />
               </div>
-              <Typography
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isActive('/friends')
-                    ? 'text-blue-600'
-                    : 'text-gray-700 group-hover:text-gray-900'
-                }`}
-              >
-                Friends
-              </Typography>
+              <Link to={`/user/${userInfo?._id}/friends`}>
+                <Typography
+                  className={`text-sm font-medium transition-colors duration-200 ${
+                    isActive('/friends')
+                      ? 'text-blue-600'
+                      : 'text-gray-700 group-hover:text-gray-900'
+                  }`}
+                >
+                  Friends
+                </Typography>
+              </Link>
             </Link>
 
             <Link
@@ -235,15 +240,17 @@ function Sidebar() {
                     }`}
                   />
                 </div>
-                <Typography
-                  className={`text-sm font-medium transition-colors duration-200 ${
-                    isActive('/profiles')
-                      ? 'text-blue-600'
-                      : 'text-gray-700 group-hover:text-gray-900'
-                  }`}
-                >
-                  Account Settings
-                </Typography>
+                <Link to={`settings/account`}>
+                  <Typography
+                    className={`text-sm font-medium transition-colors duration-200 ${
+                      isActive('/profiles')
+                        ? 'text-blue-600'
+                        : 'text-gray-700 group-hover:text-gray-900'
+                    }`}
+                  >
+                    Account Settings
+                  </Typography>
+                </Link>
               </Link>
 
               <Link

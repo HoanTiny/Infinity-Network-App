@@ -307,27 +307,27 @@ const Profile = () => {
         <Box className="border-t pt-4">
           <ul className="flex gap-4 text-gray-600">
             {tabs.map((tab, index) => (
-              <li
-                key={index}
-                className={`cursor-pointer px-4 py-2 rounded-lg ${
-                  tab.active ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'
-                }`}
-                onClick={() => {
-                  setTabs(
-                    tabs.map((t, i) => ({
-                      ...t,
-                      active: i === index,
-                    }))
-                  );
-                }}
+              <Link
+                to={`/user/${userId}/${tab.label.toLowerCase()}`}
+                className="flex items-center gap-2"
               >
-                <Link
-                  to={`/user/${userId}/${tab.label.toLowerCase()}`}
-                  className="flex items-center gap-2"
+                <li
+                  key={index}
+                  className={`cursor-pointer px-4 py-2 rounded-lg ${
+                    tab.active ? 'bg-blue-600 text-white' : 'hover:bg-gray-200'
+                  }`}
+                  onClick={() => {
+                    setTabs(
+                      tabs.map((t, i) => ({
+                        ...t,
+                        active: i === index,
+                      }))
+                    );
+                  }}
                 >
                   {tab.name}
-                </Link>
-              </li>
+                </li>
+              </Link>
             ))}
           </ul>
         </Box>

@@ -104,6 +104,7 @@ export const rootApi = createApi({
     '0',
     'PENDING_FRIENDS_REQUEST',
     'GET_USER_INFO_BY_ID',
+    'GET_AUTH_USER',
   ],
   // refetchOnMountOrArgChange: 5,
   // refetchOnFocus: true, // Tự động gọi lại API khi cửa sổ/tab ứng dụng lấy lại trạng thái focus
@@ -153,6 +154,7 @@ export const rootApi = createApi({
     getAuthUser: builder.query<void, void>({
       // <void, void>
       query: () => '/auth-user',
+      providesTags: [{ type: 'GET_AUTH_USER' }],
     }),
 
     searchUsers: builder.query<
