@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Avatar,
   Box,
   Button,
   Chip,
@@ -10,7 +9,6 @@ import {
   IconButton,
   Stack,
 } from '@mui/material';
-import { deepOrange } from '@mui/material/colors';
 import PublicIcon from '@mui/icons-material/Public';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { useCallback, useState } from 'react';
@@ -20,6 +18,7 @@ import { useCreatePostMutation } from '@services/postApi';
 import { useDispatch } from 'react-redux';
 import { closeDialog } from '@redux/slice/dialogSlice';
 import { openSnackbar } from '@redux/slice/snackbar';
+import UserAvatar from '@components/UserAvatar';
 
 function ImageUploader({ image, setImage }: { image: any; setImage: any }) {
   const onDrop = useCallback(
@@ -120,7 +119,7 @@ function NewPostDiaLog() {
       <DialogContent>
         <Box className="flex mt-4 flex-col justify-center gap-4">
           <div className="flex gap-4 ">
-            <Avatar sx={{ bgcolor: deepOrange[500] }}>H</Avatar>
+            <UserAvatar isMyAvatar />
             <div className="">
               <span className="text-[16px]">Trần Ngọc Hoàn</span>
               <div className="flex items-center text-[16px] bg-[#f0f2f5] rounded-lg justify-center">

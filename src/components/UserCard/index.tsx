@@ -1,8 +1,6 @@
 import { socket } from '@context/SocketProvider';
 import { Check } from '@mui/icons-material';
 import { Button, CircularProgress } from '@mui/material';
-import Avatar from '@mui/material/Avatar';
-import deepOrange from '@mui/material/colors/deepOrange';
 import MyButton from '@components/Button';
 
 import {
@@ -13,11 +11,12 @@ import {
 } from '@services/friendApi';
 import { UserMinus } from '@components/Icon';
 import { Link } from 'react-router-dom';
+import UserAvatar from '@components/UserAvatar';
 
 export type UserCardProps = {
   isFriend: boolean;
   fullName: string;
-  avatar: string;
+  image?: string;
   id: string;
   requestSent?: boolean;
   requestReceived?: boolean;
@@ -25,7 +24,7 @@ export type UserCardProps = {
 function UserCard({
   isFriend,
   fullName,
-  avatar,
+  image,
   id,
   requestSent,
   requestReceived,
@@ -130,17 +129,7 @@ function UserCard({
 
   return (
     <div className="flex flex-col items-center flex-1 p-4 bg-white rounded-lg shadow-md gap-5">
-      {avatar ? (
-        <Avatar
-          alt={fullName}
-          src={avatar}
-          sx={{ width: 80, height: 80, bgcolor: deepOrange[500] }}
-        />
-      ) : (
-        <Avatar sx={{ width: 80, height: 80, bgcolor: deepOrange[500] }}>
-          {fullName[0]}
-        </Avatar>
-      )}
+      <UserAvatar src={image} fullName={fullName} className="!w-20 !h-20" />
       <Link to={`/user/${id}`}>
         <h3>{fullName}</h3>
       </Link>

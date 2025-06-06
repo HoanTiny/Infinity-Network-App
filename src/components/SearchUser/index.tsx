@@ -28,7 +28,7 @@ function SearchUser() {
             id={user._id}
             isFriend={user.isFriend}
             fullName={user.fullName}
-            avatar={user?.avatar}
+            image={user?.image}
             requestSent={user?.requestSent}
             requestReceived={user?.requestReceived}
           />

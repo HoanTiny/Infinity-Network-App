@@ -9,17 +9,15 @@ import {
   List,
   ListItemButton,
   ListItemAvatar,
-  Avatar,
   ListItemText,
   Typography,
   Divider,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import CircleIcon from '@mui/icons-material/FiberManualRecord';
 import { useGetNotificationsQuery } from '@services/notificationApi';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import UserAvatar from '@components/UserAvatar';
 
 const NotificationsPanel = () => {
   const { data } = useGetNotificationsQuery() as {
@@ -28,7 +26,7 @@ const NotificationsPanel = () => {
   };
   const notifications = data?.notifications || [];
   const newCount = notifications.filter((n) => !n.seen).length;
-
+  console.log('notifications', notifications);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -111,15 +109,10 @@ const NotificationsPanel = () => {
                 }}
               >
                 <ListItemAvatar>
-                  <Avatar
-                    sx={{ bgcolor: note.like ? 'error.main' : 'primary.main' }}
-                  >
-                    {note.like ? (
-                      <FavoriteIcon fontSize="small" />
-                    ) : (
-                      <CircleIcon fontSize="small" />
-                    )}
-                  </Avatar>
+                  <UserAvatar
+                    src={note.author?.image}
+                    fullName={note.author?.fullName}
+                  />
                 </ListItemAvatar>
 
                 <ListItemText

@@ -3,7 +3,7 @@ export type UserInfoSearch = {
   _id: string;
   isFriend: boolean;
   fullName: string;
-  avatar: string;
+  image?: string;
   requestSent?: boolean;
   requestReceived?: boolean;
 };
@@ -27,7 +27,7 @@ export interface Like {
 export interface Comment {
   /* tuỳ vào shape của comment API, ví dụ: */
   _id: string;
-  author: { _id: string; fullName: string };
+  author: { _id: string; fullName: string; image?: string };
   content: string;
   createdAt: string;
   updatedAt: string;
@@ -84,6 +84,7 @@ export interface Comment {
   author: {
     _id: string;
     fullName: string;
+    image?: string;
   };
   post: string;
   createdAt: string;

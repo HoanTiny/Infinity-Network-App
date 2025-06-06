@@ -1,5 +1,6 @@
+import UserAvatar from '@components/UserAvatar';
 import Send from '@mui/icons-material/Send';
-import { Avatar, TextField } from '@mui/material';
+import { TextField } from '@mui/material';
 // import { useCreateNotificationMutation } from '@services/notificationApi';
 import { useEffect, useState } from 'react';
 import { Comment } from 'src/ultil/type';
@@ -51,7 +52,7 @@ const CommentSection = ({
       <div className="max-h-96 overflow-y-auto pr-2 flex flex-col gap-4">
         {visibleComments.map((comment) => (
           <div key={comment._id} className="flex gap-3 items-start">
-            <Avatar src={comment._id} />
+            <UserAvatar src={comment.author.image} />
             <div className="bg-gray-100 px-4 py-2 rounded-xl w-full">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold text-sm text-[#344054]">
@@ -77,7 +78,7 @@ const CommentSection = ({
       )}
 
       <div className="flex gap-3 items-start mt-2">
-        <Avatar src="/images/default-avatar.png" />
+        <UserAvatar isMyAvatar />
         <TextField
           fullWidth
           multiline

@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CommentSection from '@components/CommentSection';
 import { CommentIcon, LikeIcon, ShareIcon } from '@components/Icon';
-import { Avatar } from '@mui/material';
-import { deepOrange } from '@mui/material/colors';
+import UserAvatar from '@components/UserAvatar';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -20,6 +19,7 @@ export type PostProps = {
   isLiked?: boolean;
   handleComment: (postId: string, comment: string) => void;
   resetComment?: boolean;
+  imagePost?: string;
   auhorId?: string;
 };
 
@@ -35,6 +35,7 @@ function Post({
   isLiked = false,
   handleComment,
   resetComment,
+  imagePost,
   auhorId = '',
 }: PostProps) {
   const [toggleComment, setToggleComment] = useState(false);
@@ -47,7 +48,8 @@ function Post({
   return (
     <div className="flex flex-col gap-4 bg-light-100 card mt-4 rounded-lg">
       <div className="flex gap-4 ">
-        <Avatar sx={{ bgcolor: deepOrange[500] }}>H</Avatar>
+        {/* <Avatar sx={{ bgcolor: deepOrange[500] }}>H</Avatar> */}
+        <UserAvatar src={image} />
         <div className="">
           <Link
             to={`/user/${auhorId}`}
@@ -68,9 +70,9 @@ function Post({
       </div>
 
       <div>
-        {image && (
+        {imagePost && (
           <img
-            src={image}
+            src={imagePost}
             alt="random"
             className="w-full h-full object-cover rounded-lg"
           />

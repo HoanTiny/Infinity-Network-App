@@ -9,8 +9,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Avatar } from '@mui/material';
 import { useUserInfo } from '@hooks/getUserinfo';
+import UserAvatar from '@components/UserAvatar';
 
 interface SocketProviderProps {
   children: ReactNode;
@@ -78,10 +78,9 @@ function SocketProvider({ children }: SocketProviderProps) {
               borderRadius: 8,
             }}
           >
-            <Avatar
-              src={data?.sender?.avatar || ''}
-              alt={data?.sender?.name || ''}
-              sx={{ width: 40, height: 40 }}
+            <UserAvatar
+              src={data?.author?.image}
+              fullName={data?.author?.fullName}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 600, color: '#050505', fontSize: 15 }}>

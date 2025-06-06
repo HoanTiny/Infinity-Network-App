@@ -1,4 +1,5 @@
 import NotificationsPaenl from '@components/NotificationsPanel.tsx';
+import UserAvatar from '@components/UserAvatar';
 import { useUserInfo } from '@hooks/getUserinfo';
 import { useMediumScreen } from '@hooks/index';
 import { useLogout } from '@hooks/useLogout';
@@ -6,7 +7,6 @@ import { Search } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
-  Avatar,
   Box,
   IconButton,
   Menu,
@@ -152,9 +152,10 @@ function Header() {
               onClick={handleProfileMenuOpen}
               color="inherit"
             >
-              <Avatar sx={{ bgcolor: '#246AA3 ' }}>
+              {/* <Avatar sx={{ bgcolor: '#246AA3 ' }} src={infoUser.image}>
                 {infoUser.fullName?.[0]}
-              </Avatar>
+              </Avatar> */}
+              <UserAvatar isMyAvatar={true} />
             </IconButton>
           </div>
         </Toolbar>

@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import UserAvatar from '@components/UserAvatar';
 import { useUserInfo } from '@hooks/getUserinfo';
 import { useMediumScreen } from '@hooks/index';
 import { Close } from '@mui/icons-material';
-import { Drawer, IconButton, Typography, Avatar } from '@mui/material';
+import { Drawer, IconButton, Typography } from '@mui/material';
 import { toggleDrawer } from '@redux/slice/settingSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
@@ -49,11 +50,7 @@ function Sidebar() {
               state={{ from: 'sidebar' }}
               className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 group"
             >
-              <Avatar
-                src="/img/user-avatar.jpg"
-                alt="User Avatar"
-                className="w-9 h-9 group-hover:scale-105 transition-transform duration-200"
-              />
+              <UserAvatar isMyAvatar />
               <Typography className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
                 {userInfo?.fullName || 'Your Name'}
               </Typography>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Avatar, TextField } from '@mui/material';
-import { deepOrange } from '@mui/material/colors';
+import UserAvatar from '@components/UserAvatar';
+import { TextField } from '@mui/material';
 import { openDialog } from '@redux/slice/dialogSlice';
 import { useDispatch } from 'react-redux';
 
@@ -9,7 +9,7 @@ function PostCreation() {
 
   return (
     <div className="flex gap-4 w-full justify-between card items-center text-[#4B465C]">
-      <Avatar sx={{ bgcolor: deepOrange[500] }}>N</Avatar>
+      <UserAvatar isMyAvatar />
       <TextField
         name="mind"
         placeholder="What's on your mind?"

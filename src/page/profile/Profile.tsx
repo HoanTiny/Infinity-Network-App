@@ -8,7 +8,7 @@ import {
   PersonSearch,
 } from '@mui/icons-material';
 
-import { Avatar, Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 import { useGetUserProfileQuery } from '@services/userApi';
 import { useState } from 'react';
 import { Link, Outlet, useLocation, useParams } from 'react-router-dom';
@@ -24,6 +24,7 @@ import { toast } from 'react-toastify';
 import { useEffect } from 'react';
 import { socket } from '@context/SocketProvider';
 import Loading from '@components/Loading';
+import UserAvatar from '@components/UserAvatar';
 const tabsData = [
   { name: 'Bài viết', active: true, label: 'about' },
   // { name: 'Giới thiệu', active: false, label: 'introduce' },
@@ -130,9 +131,9 @@ const Profile = () => {
       {/* Image Bìa */}
       <Box className="mb-4">
         <img
-          src="/img/car.jpg"
+          src={data?.coverImage || 'https://placehold.co/1600x400'}
           alt="Cover"
-          className="w-full h-64 object-cover rounded-lg"
+          className="w-full h-[462px] object-cover rounded-lg"
         />
       </Box>
       {/* Profile */}
@@ -145,14 +146,7 @@ const Profile = () => {
             <div className="flex flex-col md:flex-row items-center md:items-start">
               {/* Avatar */}
               <div className="mx-auto md:mx-0 md:ml-4 mt-[-40px] md:mt-[-60px]">
-                <Avatar
-                  sx={{
-                    width: { xs: 80, md: 120 },
-                    height: { xs: 80, md: 120 },
-                    border: '4px solid white',
-                  }}
-                  alt="Profile Picture"
-                />
+                <UserAvatar src={data?.image} className="!w-32 !h-32" />
               </div>
 
               {/* Profile info */}

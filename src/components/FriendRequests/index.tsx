@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Button from '@components/Button';
+import UserAvatar from '@components/UserAvatar';
 import { socket } from '@context/SocketProvider';
-import { Avatar, CircularProgress } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import {
   useAcceptFriendRequestMutation,
   useCancelFriendRequestMutation,
@@ -12,9 +13,14 @@ import { Link } from 'react-router-dom';
 type FriendItemRequestProps = {
   fullName: string;
   id: string;
+  imageSrc?: string;
 };
 
-const FriendItemRequest = ({ fullName, id }: FriendItemRequestProps) => {
+const FriendItemRequest = ({
+  fullName,
+  id,
+  imageSrc,
+}: FriendItemRequestProps) => {
   const [aceptFriendRequest, { isLoading: isAccepting }] =
     useAcceptFriendRequestMutation();
   const [cancelFriendRequest, { isLoading: isCanceling }] =
@@ -23,11 +29,7 @@ const FriendItemRequest = ({ fullName, id }: FriendItemRequestProps) => {
   return (
     <div className="friend-item-request flex gap-4 mb-4">
       <div className="friend-item-request__avatar">
-        <Avatar
-          sx={{ width: 50, height: 50 }}
-          alt={fullName}
-          src="https://cdn-icons-png.flaticon.com/512/147/147144.png"
-        />
+        <UserAvatar src={imageSrc} fullName={fullName} />
       </div>
 
       <div className="friend-item-request__info flex flex-col gap-1">
@@ -105,6 +107,7 @@ function FriendRequest() {
             key={item._id}
             fullName={item.fullName}
             id={item._id}
+            imageSrc={item.image}
           />
         ))}
       </div>

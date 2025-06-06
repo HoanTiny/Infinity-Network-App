@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import UserAvatar from '@components/UserAvatar';
 import { MoreHoriz } from '@mui/icons-material';
-import { Avatar } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import { useGetUserAllFriendsByIdQuery } from '@services/friendApi';
 import { useState } from 'react';
@@ -34,11 +34,7 @@ const ListFriends = () => {
         {data?.friends?.map((friend: any) => (
           <Grid size={{ xs: 12, sm: 6 }} key={friend._id}>
             <div className="border p-4 flex items-center justify-between gap-4 rounded-lg">
-              <Avatar
-                src={friend?.image}
-                variant="rounded"
-                sx={{ width: 80, height: 80 }}
-              ></Avatar>
+              <UserAvatar src={friend?.image} fullName={friend?.fullName} />
               <div className="flex-1">
                 <Link to={`/user/${friend._id}`}>
                   <h2 className="text-md">{friend.fullName}</h2>
