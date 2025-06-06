@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import CommentSection from '@components/CommentSection';
 import { CommentIcon, LikeIcon, ShareIcon } from '@components/Icon';
+import TimeAgo from '@components/TimeAgo';
 import UserAvatar from '@components/UserAvatar';
-import dayjs from 'dayjs';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Comment } from 'src/ultil/type';
@@ -59,7 +59,8 @@ function Post({
           </Link>
           <div className="flex text-[16px] rounded-lg">
             <span className="text-[#4B465C] text-[13px]">
-              {dayjs(createAt).format('DD/MM/YYYY HH:mm')}
+              {/* {dayjs(createAt).format('DD/MM/YYYY HH:mm')} */}
+              <TimeAgo date={createAt} />
             </span>
           </div>
         </div>

@@ -10,6 +10,8 @@ interface ButtonProps {
   children?: React.ReactNode;
   className?: string;
   sx?: any;
+  type?: 'button' | 'submit' | 'reset';
+  inputProps?: any;
 }
 
 function Button({
@@ -21,6 +23,8 @@ function Button({
   children,
   className = '',
   sx,
+  type,
+  inputProps = {},
 }: ButtonProps) {
   return (
     <MuiButton
@@ -30,6 +34,8 @@ function Button({
       disabled={isLoading}
       className={className}
       sx={sx}
+      type={type}
+      {...inputProps}
     >
       {isLoading ? <CircularProgress size={20} className="mr-2" /> : icon}{' '}
       {children}

@@ -2,7 +2,10 @@
 'use client';
 
 import Button from '../Button';
-import { useUploadPhotoUserMutation } from '@services/userApi';
+import {
+  useResetPhotoMutation,
+  useUploadPhotoUserMutation,
+} from '@services/userApi';
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
@@ -21,6 +24,7 @@ const ImageUpload = ({
   //   const [file, setFile] = useState<File | null>(null);
 
   const [uploadPhotoUser, { isLoading }] = useUploadPhotoUserMutation();
+  const [resetPhoto, { isLoading: isResetLoading }] = useResetPhotoMutation();
 
   const onDrop = useCallback(
     (acceptedFiles: any) => {
@@ -47,6 +51,24 @@ const ImageUpload = ({
   );
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
+  const handleReset = () => {
+    console.log('isCover', isCover);
+    // Reset logic here, e.g., call an API to reset the image
+    // console.log('Reset image');
+    // const formData = new FormData();
+    // formData.append('isCover', isCover.toString());
+    resetPhoto({ isCover })
+      .unwrap()
+      .then((response: any) => {
+        console.log('Image reset successfully:', response);
+        toast.success('Image reset successfully');
+      })
+      .catch((error: any) => {
+        console.error('Error resetting image:', error);
+        toast.error(error?.data?.message || 'Error resetting image');
+      });
+  };
+
   return (
     <div>
       <div className="flex-1 flex flex-col">
@@ -68,13 +90,25 @@ const ImageUpload = ({
                   Upload new photo
                 </Button>
               </div>
-
+              {/* 
               <button
                 type="button"
                 className="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm"
+                onClick={handleReset}
+                disabled={isResetLoading}
+              >
+                
+                Reset
+              </button> */}
+
+              <Button
+                variant="outlined"
+                size="small"
+                isLoading={isResetLoading}
+                onClick={handleReset}
               >
                 Reset
-              </button>
+              </Button>
             </div>
             <span className="text-xs text-gray-500 mt-1">
               Allowed JPG, GIF or PNG

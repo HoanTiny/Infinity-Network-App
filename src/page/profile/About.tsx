@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PostCreation from '@components/PostCreation';
 import PostList from '@components/PostList';
 import { useOutletContext } from 'react-router-dom';
-type ProfileOutletContext = { userId: string; myProfile: boolean };
+type ProfileOutletContext = { userId: string; myProfile: boolean; data: any };
 
 const About = () => {
-  const { userId, myProfile } = useOutletContext<ProfileOutletContext>();
+  const { userId, myProfile, data } = useOutletContext<ProfileOutletContext>();
+  console.log('first render About', { userId, myProfile, data });
   return (
     <div className="mt-4">
       <div className=" flex flex-col md:flex-row gap-6">
@@ -13,14 +15,9 @@ const About = () => {
           <div className="card">
             <h3 className="text-lg font-bold mb-2">Introduction</h3>
             <p>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi
-              nulla dolor, ornare at commodo non, feugiat non nisi. Phasellus
-              faucibus mollis pharetra. Proin blandit ac massa sed rhoncus
+              {data?.about ||
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
             </p>
-            {/* <p>
-                      <LocationCity className="inline-block mr-1" />
-                      Hà Nội City
-                    </p> */}
           </div>
           <div className="card">
             <div className="flex justify-between items-center mb-3">

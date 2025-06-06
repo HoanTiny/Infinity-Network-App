@@ -304,6 +304,7 @@ const Profile = () => {
               <Link
                 to={`/user/${userId}/${tab.label.toLowerCase()}`}
                 className="flex items-center gap-2"
+                key={index}
               >
                 <li
                   key={index}
@@ -331,6 +332,7 @@ const Profile = () => {
         context={{
           userId: userId,
           myProfile: myProfile,
+          data: data,
         }}
       />
 

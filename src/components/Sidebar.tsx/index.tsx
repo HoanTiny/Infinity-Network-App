@@ -134,7 +134,7 @@ function Sidebar() {
             </Link>
 
             <Link
-              to="/friends"
+              to={`/user/${userInfo?._id}/friends`}
               className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
                 isActive('/friends')
                   ? 'bg-blue-50 border-l-4 border-blue-500'
@@ -156,17 +156,16 @@ function Sidebar() {
                   }`}
                 />
               </div>
-              <Link to={`/user/${userInfo?._id}/friends`}>
-                <Typography
-                  className={`text-sm font-medium transition-colors duration-200 ${
-                    isActive('/friends')
-                      ? 'text-blue-600'
-                      : 'text-gray-700 group-hover:text-gray-900'
-                  }`}
-                >
-                  Friends
-                </Typography>
-              </Link>
+
+              <Typography
+                className={`text-sm font-medium transition-colors duration-200 ${
+                  isActive('/friends')
+                    ? 'text-blue-600'
+                    : 'text-gray-700 group-hover:text-gray-900'
+                }`}
+              >
+                Friends
+              </Typography>
             </Link>
 
             <Link
@@ -215,16 +214,16 @@ function Sidebar() {
 
             <div className="space-y-1">
               <Link
-                to="/profiles"
+                to={`settings/account`}
                 className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
-                  isActive('/profiles')
+                  isActive('settings/account')
                     ? 'bg-blue-50 border-l-4 border-blue-500'
                     : 'hover:bg-gray-100'
                 }`}
               >
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                    isActive('/profiles')
+                    isActive('settings/account')
                       ? 'bg-blue-500'
                       : 'bg-gray-100 group-hover:bg-blue-100'
                   }`}
@@ -233,21 +232,21 @@ function Sidebar() {
                     src="/icons/settings.svg"
                     alt="Account"
                     className={`w-5 h-5 ${
-                      isActive('/profiles') ? 'filter brightness-0 invert' : ''
+                      isActive('settings/account')
+                        ? 'filter brightness-0 invert'
+                        : ''
                     }`}
                   />
                 </div>
-                <Link to={`settings/account`}>
-                  <Typography
-                    className={`text-sm font-medium transition-colors duration-200 ${
-                      isActive('/profiles')
+
+                <Typography
+                  className={`text-sm font-medium transition-colors duration-200 
                         ? 'text-blue-600'
                         : 'text-gray-700 group-hover:text-gray-900'
                     }`}
-                  >
-                    Account Settings
-                  </Typography>
-                </Link>
+                >
+                  Account Settings
+                </Typography>
               </Link>
 
               <Link

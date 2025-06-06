@@ -8,13 +8,23 @@ import { closeDialog } from '@redux/slice/dialogSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import NewPostDiaLog from './config/NewPostDiaLog';
 import TitleCreatePost from './config/TitleCreatePost';
+import PostDetailDialog from './config/PostDialog';
 
-const DynamicContent = ({ contentType }: { contentType: string }) => {
+const DynamicContent = ({
+  contentType,
+  data,
+}: {
+  contentType: string;
+  data?: any;
+}) => {
   switch (contentType) {
     case 'NEW_CONTENT_DIALOG':
       return <NewPostDiaLog />;
     case 'TITLE_CREATE_POST':
       return <TitleCreatePost />;
+    case 'POST_DETAIL_DIALOG':
+      return <PostDetailDialog data={data} />;
+
     default:
       return <p>Invalid content type</p>;
   }
@@ -23,6 +33,8 @@ const DynamicContent = ({ contentType }: { contentType: string }) => {
 function Dialog() {
   const dispatch = useDispatch();
   const dialog = useSelector((store: any) => store.dialog);
+
+  console.log('Dialog data:', dialog);
 
   return (
     <MUIDialog
@@ -40,7 +52,7 @@ function Dialog() {
         <DynamicContent contentType={dialog.title} />
       </DialogTitle>
 
-      <DynamicContent contentType={dialog.content} />
+      <DynamicContent contentType={dialog.content} data={dialog.data} />
     </MUIDialog>
   );
 }

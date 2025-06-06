@@ -185,6 +185,14 @@ export const postApi = rootApi.injectEndpoints({
 
         providesTags: [{ type: 'POSTS' }],
       }),
+      getPostsById: builder.query<any, any>({
+        query: (postId) => {
+          return {
+            url: `/posts/${postId}`,
+          };
+        },
+        providesTags: [{ type: 'POSTS' }],
+      }),
       getPostsByAuthorId: builder.query<PostResponsive, any>({
         query: ({ limit, offset, userId } = {}) => {
           return {
@@ -487,4 +495,5 @@ export const {
   useUnlikePostMutation,
   useCommentPostMutation,
   useGetPostsByAuthorIdQuery,
+  useGetPostsByIdQuery,
 } = postApi;

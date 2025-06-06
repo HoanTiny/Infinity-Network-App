@@ -1,12 +1,36 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import FormField from '@components/FormField';
+import TextArea from '@components/FormInput/TextArea';
 import TextInput from '@components/FormInput/TextInput';
 import ImageUpload from '@components/ImageUpload';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { useUserInfo } from '@hooks/getUserinfo';
+import { useUpdateUserProfileMutation } from '@services/userApi';
 import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { toast } from 'react-toastify';
+import Button from '@components/Button';
 
 const Account = () => {
-  const { control, handleSubmit } = useForm();
+  const [updateUserProfile, { isLoading }] = useUpdateUserProfileMutation();
+  const { about, fullName } = useUserInfo();
+
+  const settingFormSchema = yup.object().shape({
+    fullName: yup.string().required('Full name is required'),
+    about: yup.string().max(500, 'About me cannot exceed 500 characters'),
+  });
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm({
+    resolver: yupResolver(settingFormSchema),
+    defaultValues: {
+      fullName,
+      about,
+    },
+  });
 
   const { image, coverImage } = useUserInfo();
 
@@ -14,7 +38,17 @@ const Account = () => {
 
   const onSubmit = (data: any) => {
     console.log('Form submitted with data:', data);
-    // Lấy data ảnh từ form
+    updateUserProfile(data)
+      .unwrap()
+      .then((response: any) => {
+        console.log('Profile updated successfully:', response);
+        toast.success('Profile updated successfully');
+        reset(data); // Reset form with the new data
+      })
+      .catch((error: any) => {
+        console.error('Error updating profile:', error);
+        toast.error(error?.data?.message || 'Error updating profile');
+      });
   };
 
   return (
@@ -26,22 +60,21 @@ const Account = () => {
           <h3 className="text-xl mb-2 border-b-2 border-gray-200 pb-2">
             Profile Information
           </h3>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Avatar Upload */}
-              <ImageUpload
-                label="Avatar Image"
-                currentImage={image ?? ''}
-                isCover={false}
-              />
-              {/* Cover Image Upload */}
-              <ImageUpload
-                label="Cover Image"
-                isCover={true}
-                currentImage={coverImage ?? ''}
-              />
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Avatar Upload */}
+            <ImageUpload
+              label="Avatar Image"
+              currentImage={image ?? ''}
+              isCover={false}
+            />
+            {/* Cover Image Upload */}
+            <ImageUpload
+              label="Cover Image"
+              isCover={true}
+              currentImage={coverImage ?? ''}
+            />
+          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
             <div className="mb-4">
               <FormField
                 name="fullName"
@@ -51,7 +84,7 @@ const Account = () => {
                 className="w-full  "
                 placeholder="john.doe"
                 Component={TextInput}
-                // error={errors.email}
+                error={errors.fullName}
               />
             </div>
             <div className="mb-4">
@@ -62,23 +95,19 @@ const Account = () => {
                 type="text"
                 className="w-full  "
                 placeholder="john.doe"
-                Component={TextInput}
-                // error={errors.email}
+                Component={TextArea}
+                error={errors.about}
               />
             </div>
-            <button
+            <Button
+              variant="contained"
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              size="small"
+              isLoading={isLoading}
+              inputProps={{ disabled: !isDirty }}
             >
-              Save Changes
-            </button>
-            <button
-              type="button"
-              className="ml-4 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              onClick={() => alert('Changes discarded')}
-            >
-              Discard Changes
-            </button>
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
           </form>
         </div>
       </div>

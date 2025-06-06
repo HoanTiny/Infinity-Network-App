@@ -16,38 +16,30 @@ import {
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { useGetNotificationsQuery } from '@services/notificationApi';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import UserAvatar from '@components/UserAvatar';
+import TimeAgo from '@components/TimeAgo';
+import { useUserInfo } from '@hooks/getUserinfo';
 
 const NotificationsPanel = () => {
+  const userInfo = useUserInfo();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { data } = useGetNotificationsQuery() as {
     data: { notifications: any[] };
     refetch: () => void;
   };
   const notifications = data?.notifications || [];
-  const newCount = notifications.filter((n) => !n.seen).length;
-  console.log('notifications', notifications);
+  const newCount = notifications.filter(
+    (n) => n.author._id !== userInfo._id
+  ).length;
+  console.log('notifications', notifications, location);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
   const handleOpen = (e: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
-
-  // useEffect(() => {
-  //   const handleNotification = () => {
-  //     refetch();
-  //   };
-
-  //   // Assuming you have a socket connection set up
-  //   socket.on('CREATE_NOTIFICATION_REQUEST', (data: any) => {
-  //     console.log('data', data);
-  //   });
-
-  //   return () => {
-  //     socket.off('CREATE_NOTIFICATION_REQUEST', handleNotification);
-  //   };
-  // }, [refetch]);
 
   return (
     <Box>
@@ -92,70 +84,87 @@ const NotificationsPanel = () => {
             </ListItemButton>
           )}
 
-          {notifications.map((note) => (
-            <Box key={note._id}>
-              <ListItemButton
-                onClick={() => {
-                  // handle click (e.g., mark as seen, navigate)
-                  handleClose();
-                }}
-                sx={{
-                  alignItems: 'flex-start',
-                  backgroundColor: note.seen
-                    ? 'background.paper'
-                    : 'action.hover',
-                  px: 2,
-                  py: 1.5,
-                }}
-              >
-                <ListItemAvatar>
-                  <UserAvatar
-                    src={note.author?.image}
-                    fullName={note.author?.fullName}
-                  />
-                </ListItemAvatar>
+          {notifications.map(
+            (note) =>
+              note.author._id !== userInfo?._id && (
+                <Box key={note._id}>
+                  <ListItemButton
+                    onClick={() => {
+                      // dispatch(
+                      //   openDialog({
+                      //     title: `Bài viết của ${note.author?.fullName}`,
+                      //     content: 'POST_DETAIL_DIALOG',
+                      //     data: note,
 
-                <ListItemText
-                  primary={
-                    <Typography
-                      variant="body2"
-                      fontWeight={note.seen ? 400 : 600}
-                    >
-                      <Link
-                        to={`/user/${note.author?._id}`}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
-                      >
-                        {note.author?.fullName}{' '}
-                        {note.like
-                          ? 'liked'
-                          : note.comment
-                          ? 'commented on'
-                          : 'reacted to'}{' '}
-                        your post
-                      </Link>
-                    </Typography>
-                  }
-                  secondary={
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(note.createdAt).toLocaleString()}
-                    </Typography>
-                  }
-                />
-
-                {!note.seen && (
-                  <Badge
-                    variant="dot"
-                    color="error"
-                    sx={{
-                      '& .MuiBadge-badge': { right: 4, top: 16 },
-                      marginLeft: '21px',
+                      //     actions: 'Post',
+                      //     maxWidth: 'md',
+                      //     fullWidth: true,
+                      //   })
+                      // );
+                      handleClose();
+                      navigate(`/posts/${note.post}`, {
+                        state: { background: location }, // Lưu lại trang hiện tại
+                      });
                     }}
-                  />
-                )}
-              </ListItemButton>
-              <Divider component="li" sx={{ my: 0 }} />
-            </Box>
-          ))}
+                    sx={{
+                      alignItems: 'flex-start',
+                      backgroundColor: note.seen
+                        ? 'background.paper'
+                        : 'action.hover',
+                      px: 2,
+                      py: 1.5,
+                    }}
+                  >
+                    <ListItemAvatar>
+                      <UserAvatar
+                        src={note.author?.image}
+                        fullName={note.author?.fullName}
+                      />
+                    </ListItemAvatar>
+
+                    <ListItemText
+                      primary={
+                        <Typography
+                          variant="body2"
+                          fontWeight={note.seen ? 400 : 600}
+                        >
+                          <Link
+                            to={`/user/${note.author?._id}`}
+                            style={{ textDecoration: 'none', color: 'inherit' }}
+                          >
+                            {note.author?.fullName}{' '}
+                            {note.like
+                              ? 'liked'
+                              : note.comment
+                              ? 'commented on'
+                              : 'reacted to'}{' '}
+                            your post
+                          </Link>
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography variant="caption" color="text.secondary">
+                          {/* {new Date(note.createdAt).toLocaleString()} */}
+                          <TimeAgo date={note.createdAt} />
+                        </Typography>
+                      }
+                    />
+
+                    {!note.seen && (
+                      <Badge
+                        variant="dot"
+                        color="error"
+                        sx={{
+                          '& .MuiBadge-badge': { right: 4, top: 16 },
+                          marginLeft: '21px',
+                        }}
+                      />
+                    )}
+                  </ListItemButton>
+                  <Divider component="li" sx={{ my: 0 }} />
+                </Box>
+              )
+          )}
         </List>
       </Menu>
     </Box>

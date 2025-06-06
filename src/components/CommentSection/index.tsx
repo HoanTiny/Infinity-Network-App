@@ -1,3 +1,4 @@
+import TimeAgo from '@components/TimeAgo';
 import UserAvatar from '@components/UserAvatar';
 import Send from '@mui/icons-material/Send';
 import { TextField } from '@mui/material';
@@ -59,7 +60,7 @@ const CommentSection = ({
                   {comment.author.fullName}
                 </span>
                 <span className="text-xs text-gray-500">
-                  {new Date(comment.updatedAt).toLocaleString()}
+                  <TimeAgo date={comment.updatedAt} />
                 </span>
               </div>
               <p className="text-sm text-[#4B465C]">{comment.comment}</p>

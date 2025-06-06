@@ -7,6 +7,7 @@ const initialState = {
   title: null,
   content: null,
   actions: null,
+  data: null,
   maxWidth: 'xs',
   fullWidth: true,
 };

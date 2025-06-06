@@ -24,12 +24,26 @@ export const userApi = rootApi.injectEndpoints({
       ],
     }),
 
+    resetPhoto: builder.mutation({
+      query: (isCover) => {
+        return {
+          url: '/users/reset-photo',
+          method: 'DELETE',
+          body: isCover,
+        };
+      },
+      invalidatesTags: [
+        { type: 'GET_AUTH_USER' },
+        { type: 'GET_USER_INFO_BY_ID' },
+      ],
+    }),
+
     updateUserProfile: builder.mutation({
-      query: (payload) => {
+      query: (formData) => {
         return {
           url: '/users/update-profile',
           method: 'PATCH',
-          body: payload,
+          body: formData,
         };
       },
       invalidatesTags: [{ type: 'GET_AUTH_USER' }],
@@ -41,4 +55,9 @@ export const userApi = rootApi.injectEndpoints({
   }),
 });
 
-export const { useGetUserProfileQuery, useUploadPhotoUserMutation } = userApi;
+export const {
+  useGetUserProfileQuery,
+  useUploadPhotoUserMutation,
+  useResetPhotoMutation,
+  useUpdateUserProfileMutation,
+} = userApi;
