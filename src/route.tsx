@@ -108,6 +108,8 @@ import LoginPage from '@page/auth/LoginPage';
 import OTPVerifyPage from '@page/auth/OTPVerifyPage';
 import { Navigate } from 'react-router-dom';
 import Account from '@page/settings/Account';
+import Messages from '@page/messages';
+import ChatDetail from '@page/messages/ChatDetail';
 
 // Xóa createBrowserRouter, chuyển sang export routes array để dùng với <Routes> trong App.tsx
 const routes = [
@@ -157,6 +159,16 @@ const routes = [
               {
                 path: 'account',
                 element: <Account />,
+              },
+            ],
+          },
+          {
+            path: 'messages',
+            element: <Messages />, // Chưa có component, để tạm
+            children: [
+              {
+                path: ':userId',
+                element: <ChatDetail />, // Chưa có component, để tạm
               },
             ],
           },

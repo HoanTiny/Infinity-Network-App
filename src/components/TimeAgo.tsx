@@ -4,17 +4,23 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
-const TimeAgo = ({ date }: any) => {
+type TimeAgoProps = {
+  date: any;
+  message?: boolean;
+};
+
+const TimeAgo = ({ date, message = false }: TimeAgoProps) => {
   const timeAgo = dayjs(date).fromNow();
   if (!date) return null;
   const diff = dayjs().diff(dayjs(date), 'day');
   const formattedDate = dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 
-  if (diff < 7) {
+  if (diff < 7 || message) {
     return (
       <span title={dayjs(date).format('YYYY-MM-DD HH:mm:ss')}>{timeAgo}</span>
     );
   }
+
   return <span title={date}>{formattedDate}</span>;
 };
 
