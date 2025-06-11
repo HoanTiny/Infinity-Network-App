@@ -105,6 +105,8 @@ export const rootApi = createApi({
     'PENDING_FRIENDS_REQUEST',
     'GET_USER_INFO_BY_ID',
     'GET_AUTH_USER',
+    'MESSAGES',
+    'CONVERSATIONS',
   ],
   // refetchOnMountOrArgChange: 5,
   // refetchOnFocus: true, // Tự động gọi lại API khi cửa sổ/tab ứng dụng lấy lại trạng thái focus

@@ -2,12 +2,18 @@
 import TimeAgo from '@components/TimeAgo';
 import UserAvatar from '@components/UserAvatar';
 import { useUserInfo } from '@hooks/getUserinfo';
-import { useGetConversationsQuery } from '@services/messagesApi';
-import { Link } from 'react-router-dom';
+import { Circle } from '@mui/icons-material';
+import {
+  useGetConversationsQuery,
+  useMarkConversationAsSeenMutation,
+} from '@services/messagesApi';
+import { Link, useParams } from 'react-router-dom';
 
 const ListConverstation = () => {
   const { data, isLoading, error } = useGetConversationsQuery({});
   const infoUser = useUserInfo();
+  const { userId: activeUserId } = useParams<{ userId: string }>();
+  const [markConversationAsSeen] = useMarkConversationAsSeenMutation();
   console.log('Data conversations:', data, infoUser);
   return (
     <div className="card ">
@@ -31,21 +37,42 @@ const ListConverstation = () => {
             <li className="p-2 text-red-500">Failed to load conversations.</li>
           )}
           {Array.isArray(data) && data.length > 0
-            ? data.map((conversation: any) => {
+            ? data.map((conversation: any, index: number) => {
                 const partner =
                   conversation.sender._id === infoUser._id
                     ? conversation.receiver
                     : conversation.sender;
+                const isActive = activeUserId === partner._id;
+                const isUnread =
+                  conversation.seen === false &&
+                  conversation.sender._id !== infoUser._id;
                 return (
-                  <Link to={`/messages/${partner._id}`}>
+                  <Link
+                    to={`/messages/${partner._id}`}
+                    onClick={() => {
+                      if (isUnread) {
+                        markConversationAsSeen({
+                          sender: conversation.sender._id,
+                        });
+                      }
+                    }}
+                    key={index}
+                    className="relative"
+                  >
                     <li
                       key={conversation.id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer flex justify-start items-start gap-2 rounded-lg"
+                      className={`p-2  cursor-pointer flex justify-start items-start gap-2 rounded-lg ${
+                        isActive ? 'bg-[#f2f2f2] transition-all' : ''
+                      }`}
                     >
                       <UserAvatar src={partner.image} />
                       <div className="flex justify-between flex-col flex-1">
                         <span>{conversation.sender.fullName}</span>
-                        <span className="text-gray-500 text-sm">
+                        <span
+                          className={`text-gray-500 text-sm line-clamp-1 truncate max-w-xs  ${
+                            isUnread ? 'font-bold !text-black' : ''
+                          }`}
+                        >
                           {infoUser._id === conversation.sender._id
                             ? `You: ${conversation.message} `
                             : conversation.message || 'No messages yet.'}
@@ -59,6 +86,16 @@ const ListConverstation = () => {
                             ''
                           )}
                         </span>
+                      </div>
+                      <div
+                        className={`absolute top-7 right-2 ${
+                          isUnread ? 'block' : 'hidden'
+                        }`}
+                      >
+                        <Circle
+                          className={`${isUnread ? 'text-[#3096e0]' : ''} ml-1`}
+                          style={{ fontSize: '10px' }}
+                        />
                       </div>
                     </li>
                   </Link>
