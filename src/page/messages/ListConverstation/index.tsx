@@ -14,7 +14,7 @@ const ListConverstation = () => {
   const infoUser = useUserInfo();
   const { userId: activeUserId } = useParams<{ userId: string }>();
   const [markConversationAsSeen] = useMarkConversationAsSeenMutation();
-  console.log('Data conversations:', data, infoUser);
+  // console.log('Data conversations:', data, infoUser);
   return (
     <div className="card ">
       {/* Searhc Messages */}

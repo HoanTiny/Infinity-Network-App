@@ -6,29 +6,34 @@ import {
   useSendMeassageMutation,
 } from '@services/messagesApi';
 import { useEffect, useState } from 'react';
+import { useCreateNotification } from '@hooks/index';
+import { socket } from '@context/SocketProvider';
 
 const MessageCreation = ({ userId, ref }: any) => {
   const [newMessage, setNewMessage] = useState('');
   const [markConversationAsSeen] = useMarkConversationAsSeenMutation();
 
   const [sendMessage] = useSendMeassageMutation();
+  const { handleCreateNotification } = useCreateNotification();
 
   const handleSendMessage = async () => {
     if (newMessage.trim() !== '') {
-      await sendMessage({
+      const response = await sendMessage({
         message: newMessage.toString(),
         receiver: userId,
-      })
-        .unwrap()
-        .then(() => {
-          console.log('Message sent successfully');
-        })
-        .catch((error) => {
-          console.error('Failed to send message:', error);
-        });
+      }).unwrap();
+      console.log('Message sent successfully', response);
+      socket.emit('CREATE_MESSAGE', response);
+      handleCreateNotification({
+        userId: userId,
+        postId: null,
+        type: 'MESSAGE',
+        typeId: response._id,
+      });
     }
 
     console.log('message sent:', newMessage, userId);
+
     ref.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'end',

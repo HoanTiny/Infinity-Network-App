@@ -102,9 +102,13 @@ const NotificationsPanel = () => {
                       //   })
                       // );
                       handleClose();
-                      navigate(`/posts/${note.post}`, {
-                        state: { background: location }, // Lưu lại trang hiện tại
-                      });
+                      if (note.like || note.comment) {
+                        navigate(`/posts/${note.post}`, {
+                          state: { background: location }, // Lưu lại trang hiện tại
+                        });
+                      } else {
+                        navigate(`messages/${note.author._id}`);
+                      }
                     }}
                     sx={{
                       alignItems: 'flex-start',
@@ -134,11 +138,12 @@ const NotificationsPanel = () => {
                           >
                             {note.author?.fullName}{' '}
                             {note.like
-                              ? 'liked'
+                              ? 'liked your post'
                               : note.comment
-                              ? 'commented on'
-                              : 'reacted to'}{' '}
-                            your post
+                              ? 'commented on your post'
+                              : note.message
+                              ? 'sent you a message'
+                              : 'reacted to your post'}{' '}
                           </Link>
                         </Typography>
                       }

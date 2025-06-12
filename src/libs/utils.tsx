@@ -23,6 +23,13 @@ const generateNotificationMessage = (notification: any) => {
           <span>commented on your post</span>
         </div>
       )}
+
+      {notification.message && (
+        <div className="flex items-center gap-1">
+          <span className="text-blue-500">💬</span>
+          <span>send message to you</span>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { useGetMessagesQuery } from '@services/messagesApi';
 import { useParams } from 'react-router-dom';
 import MessageCreation from '../MessageCreation';
 import { useGetUserProfileQuery } from '@services/userApi';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 
 const ChatDetail = () => {
@@ -14,7 +14,6 @@ const ChatDetail = () => {
   const { userId } = useParams<{ userId: string }>();
   const { data: userData } = useGetUserProfileQuery(userId);
   const textEndRef = useRef<HTMLDivElement>(null);
-  console.log('User Data:', userData);
   const infoUser = useUserInfo();
   const currentUserId = infoUser?._id;
   const { data = { messages: [], pagination: {} } } = useGetMessagesQuery({
@@ -44,7 +43,14 @@ const ChatDetail = () => {
     return acc;
   }, {});
 
-  console.log('groupedMessages:', groupedMessages);
+  useEffect(() => {
+    if (textEndRef.current) {
+      textEndRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
+    }
+  }, [userId, data]);
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)]">
@@ -73,7 +79,7 @@ const ChatDetail = () => {
               {messages.map((message: any, index: number) => (
                 <div
                   key={index}
-                  className={`flex items-start mb-2 gap-2 ${
+                  className={`flex items-start mb-2 gap-2  ${
                     message.sender._id === currentUserId ? 'justify-end' : ''
                   }`}
                 >
@@ -81,20 +87,20 @@ const ChatDetail = () => {
                     <UserAvatar src={message.sender.image} />
                   )}
                   <div
-                    className={`ml-2 p-2 rounded-lg max-w-lg relative ${
+                    className={`ml-2 p-2 px-3 rounded-3xl max-w-lg relative min-w-[50px] ${
                       message.sender._id === currentUserId
-                        ? 'bg-blue-100'
+                        ? 'bg-blue-600 text-white'
                         : 'bg-gray-100'
                     }`}
                     onMouseEnter={() => setActiveHover(message._id)}
                     onMouseLeave={() => setActiveHover(null)}
                   >
-                    <p>{message.message}</p>
+                    <p className="w-full">{message.message}</p>
                     {activeHover === message._id && (
                       <div
                         className={`absolute top-0  bg-gray-200 p-3 rounded-lg text-xs text-gray-400 ${
                           message.sender._id !== currentUserId
-                            ? 'right-[-150%]'
+                            ? 'right-[-128px]'
                             : '-left-[58px]'
                         }`}
                       >
@@ -102,7 +108,7 @@ const ChatDetail = () => {
                         <span>
                           {dayjs().diff(dayjs(message.createdAt), 'day') > 0
                             ? dayjs(message.createdAt).format(
-                                'DD:MM:YYYY, HH:mm'
+                                ' HH:mm, DD:MM:YYYY'
                               )
                             : dayjs(message.createdAt).format('HH:mm')}
                         </span>

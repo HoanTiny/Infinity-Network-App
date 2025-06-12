@@ -157,7 +157,7 @@ export const useCreateNotification = () => {
     typeId,
   }: {
     userId: string;
-    postId: string;
+    postId: string | null;
     type: string;
     typeId: string;
   }) => {
@@ -165,14 +165,17 @@ export const useCreateNotification = () => {
       if (userId === receiverId) {
         return;
       }
-      const res = await createNotification({
+      const payload: any = {
         userId: receiverId,
-        postId,
         type,
         typeId,
-      }).unwrap();
-      console.log('res', res);
-      socket.emit('CREATE_NOTIFICATION', res);
+      };
+      if (postId) {
+        payload.postId = postId;
+      }
+      const res = await createNotification(payload).unwrap();
+      console.log('res createNotification', res);
+      socket.emit('CREATE_NOTIFICATION', { ...res, testing: false });
     } catch (error) {
       console.log('error', error);
     }

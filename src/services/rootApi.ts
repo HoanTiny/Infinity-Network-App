@@ -33,7 +33,6 @@ import { SearchUsersResponse } from 'src/ultil/type';
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   prepareHeaders: (headers, { getState }) => {
-    console.log({ store: getState() });
     const token = (getState() as { auth: { accessToken: string } }).auth
       .accessToken;
     if (token) {
@@ -44,7 +43,6 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
   const result = await baseQuery(args, api, extraOptions);
-  console.log('Result', result);
   if (result.error?.status === 401) {
     if (
       (result.error.data as { message: string })?.message ===
@@ -54,7 +52,6 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
         api.getState() as { auth: { refreshToken: string } }
       ).auth.refreshToken;
 
-      console.log('Refreshing token...', refreshToken);
       if (refreshToken) {
         const refreshResult = await baseQuery(
           {
@@ -70,8 +67,6 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
 
         const newAccessToken = (refreshResult.data as { accessToken: string })
           ?.accessToken;
-
-        console.log('New access token', newAccessToken, refreshResult);
 
         if (newAccessToken) {
           api.dispatch(

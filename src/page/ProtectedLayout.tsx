@@ -19,7 +19,7 @@ function Protectedlayout() {
 
   useEffect(() => {
     if (response.isSuccess) {
-      console.log('User is logged in');
+      // console.log('User is logged in');
       dispatch(saveUserinfo(response.data));
     }
   }, [response.isSuccess, response.data, dispatch]);

@@ -17,7 +17,7 @@ const UserAvatar = ({
 
   const myAvatar = isMyAvatar ? image : src;
   const myInfo = isMyAvatar ? userInfo?.fullName : fullName;
-  console.log('UserAvatar', userInfo);
+  // console.log('UserAvatar', userInfo);
   return (
     <Avatar
       className={`${className} ${isMyAvatar ? 'cursor-pointer' : ''}`}

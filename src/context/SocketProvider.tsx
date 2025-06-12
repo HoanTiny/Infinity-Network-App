@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUserInfo } from '@hooks/getUserinfo';
 import UserAvatar from '@components/UserAvatar';
+import { messagesApi } from '@services/messagesApi';
 
 interface SocketProviderProps {
   children: ReactNode;
@@ -25,7 +26,7 @@ function SocketProvider({ children }: SocketProviderProps) {
   const dispatch = useDispatch<AppDispatch>();
   const infoUser = useUserInfo(); // Ensure user info is fetched
 
-  console.log('first render SocketProvider', token, infoUser);
+  // console.log('first render SocketProvider', token, infoUser);
 
   useEffect(() => {
     socket.auth = { token };
@@ -102,7 +103,8 @@ function SocketProvider({ children }: SocketProviderProps) {
           </div>,
           {
             position: 'bottom-right',
-            autoClose: 5000,
+            autoClose: 3000,
+
             hideProgressBar: true,
             closeOnClick: true,
             pauseOnHover: true,
@@ -118,13 +120,51 @@ function SocketProvider({ children }: SocketProviderProps) {
             },
             icon: false,
             theme: 'light',
-            customProgressBar: true,
+            // customProgressBar: true,
           }
         );
       }
       // Hiển thị toast giống Facebook
     });
 
+    socket.on('SEND_MESSAGE', (data) => {
+      console.log('SEND_MESSAGE', data);
+      dispatch(
+        messagesApi.util.updateQueryData(
+          'getMessages',
+          { userId: data?.sender?._id },
+          (draft: any) => {
+            draft.messages.push(data);
+          }
+        )
+      );
+
+      dispatch(
+        messagesApi.util.updateQueryData(
+          'getConversations',
+          {},
+          (draft: any) => {
+            console.log('getConversations: ', JSON.stringify(draft));
+            const currentConversationIndex = draft.findIndex((mess: any) => {
+              return (
+                mess.receiver._id === data.sender._id ||
+                mess.sender._id === data.sender._id
+              );
+            });
+
+            console.log('currecurrentConversation:, ', {
+              currentConversationIndex,
+            });
+
+            if (currentConversationIndex != -1) {
+              draft.splice(currentConversationIndex, 1);
+            }
+
+            draft.unshift(data);
+          }
+        )
+      );
+    });
     return () => {
       socket.off('CREATE_NOTIFICATION_REQUEST');
     };
