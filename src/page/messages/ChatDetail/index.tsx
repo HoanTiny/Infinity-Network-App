@@ -6,8 +6,9 @@ import { useGetMessagesQuery } from '@services/messagesApi';
 import { useParams } from 'react-router-dom';
 import MessageCreation from '../MessageCreation';
 import { useGetUserProfileQuery } from '@services/userApi';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
+import { throttle } from 'lodash';
 
 const ChatDetail = () => {
   const [activeHover, setActiveHover] = useState<string | null>(null);
@@ -16,12 +17,16 @@ const ChatDetail = () => {
   const textEndRef = useRef<HTMLDivElement>(null);
   const infoUser = useUserInfo();
   const currentUserId = infoUser?._id;
+  const [offset, setOffset] = useState(0);
+  const limit = 20;
+
   const { data = { messages: [], pagination: {} } } = useGetMessagesQuery({
     userId,
-    offset: 0,
-    limit: 20,
+    offset: offset,
+    limit: limit,
   });
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const groupedMessages = data.messages.reduce((acc: any, message: any) => {
     // Format time in 5-minute intervals
     const createdAt = dayjs(message.createdAt);
@@ -52,6 +57,37 @@ const ChatDetail = () => {
     }
   }, [userId, data]);
 
+  const loadMore = useCallback(async () => {
+    setOffset((offset) => offset + limit);
+  }, []);
+
+  const handleScroll = useMemo(() => {
+    return throttle(() => {
+      if (messagesContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } =
+          messagesContainerRef.current;
+        console.log('Chat scroll:', scrollTop, clientHeight, scrollHeight);
+        // Xử lý logic ở đây, ví dụ: load thêm tin nhắn khi scroll lên đầu
+
+        if (scrollTop < 100 && offset) {
+          loadMore();
+        }
+      }
+    }, 300);
+  }, [offset]);
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+      handleScroll.cancel();
+    };
+  }, [handleScroll]);
+
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)]">
       <div className="flex items-center justify-between p-4 mb-4 border-b-2 border-gray-200">
@@ -70,7 +106,7 @@ const ChatDetail = () => {
       </div>
       <div className="rounded-lg p-4 overflow-y-auto flex flex-col  flex-1">
         {/* Messages will go here */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" ref={messagesContainerRef}>
           {Object.entries(groupedMessages).map(([date, messages]: any) => (
             <div key={date} className="mb-4">
               <div className="text-gray-500 text-sm mb-2 text-center p-4">
@@ -122,34 +158,6 @@ const ChatDetail = () => {
           <div ref={textEndRef} />
         </div>
 
-        {/* <div className="flex-1 overflow-y-auto">
-          {data.messages.map((message: any, index: number) => {
-            return (
-              <div className="mb-4 flex-1">
-                <div
-                  key={index}
-                  className={`flex items-start mb-2 gap-2 ${
-                    message.sender._id === currentUserId ? 'justify-end' : ''
-                  }`}
-                >
-                  {message.sender._id !== currentUserId && (
-                    <UserAvatar src={message.sender.image} />
-                  )}
-                  <div
-                    className={`ml-2 p-2 rounded-lg max-w-lg ${
-                      message.sender._id === currentUserId
-                        ? 'bg-blue-100'
-                        : 'bg-gray-100'
-                    }`}
-                  >
-                    <p>{message.message}</p>
-                  </div>
-                </div>
-                <div ref={textEndRef} />
-              </div>
-            );
-          })}
-        </div> */}
         <MessageCreation userId={userId} ref={textEndRef} />
       </div>
     </div>

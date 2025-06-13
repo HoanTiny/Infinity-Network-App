@@ -260,7 +260,12 @@ const Profile = () => {
                       </>
                     )}
                   </button>
-                  <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 md:px-4 py-1.5 rounded-lg flex items-center">
+                  <button
+                    onClick={() => {
+                      window.location.href = `/messages/${userId}`;
+                    }}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 md:px-4 py-1.5 rounded-lg flex items-center"
+                  >
                     <Message className="mr-1" fontSize="small" />
                     <span className="text-[13px] md:text-[14px]">Nhắn tin</span>
                   </button>

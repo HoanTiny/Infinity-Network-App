@@ -14,7 +14,7 @@ const ListConverstation = () => {
   const infoUser = useUserInfo();
   const { userId: activeUserId } = useParams<{ userId: string }>();
   const [markConversationAsSeen] = useMarkConversationAsSeenMutation();
-  // console.log('Data conversations:', data, infoUser);
+  console.log('Data conversations:', data, infoUser);
   return (
     <div className="card ">
       {/* Searhc Messages */}
@@ -67,7 +67,7 @@ const ListConverstation = () => {
                     >
                       <UserAvatar src={partner.image} />
                       <div className="flex justify-between flex-col flex-1">
-                        <span>{conversation.sender.fullName}</span>
+                        <span>{partner.fullName}</span>
                         <span
                           className={`text-gray-500 text-sm line-clamp-1 truncate max-w-xs  ${
                             isUnread ? 'font-bold !text-black' : ''
