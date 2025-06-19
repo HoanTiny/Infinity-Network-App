@@ -9,7 +9,12 @@ import { useEffect, useState } from 'react';
 import { useCreateNotification } from '@hooks/index';
 import { socket } from '@context/SocketProvider';
 
-const MessageCreation = ({ userId, ref }: any) => {
+const MessageCreation = ({
+  userId,
+  ref,
+  onSendSuccess,
+  setNewMessageLoad,
+}: any) => {
   const [newMessage, setNewMessage] = useState('');
   const [markConversationAsSeen] = useMarkConversationAsSeenMutation();
 
@@ -30,6 +35,12 @@ const MessageCreation = ({ userId, ref }: any) => {
         type: 'MESSAGE',
         typeId: response._id,
       });
+
+      // Gọi callback để thêm tin nhắn mới vào cuối danh sách
+      if (onSendSuccess) {
+        onSendSuccess(response);
+        setNewMessageLoad(true);
+      }
     }
 
     console.log('message sent:', newMessage, userId);
