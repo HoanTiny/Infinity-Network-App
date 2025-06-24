@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { throttle } from 'lodash';
 import { socket } from '@context/SocketProvider';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 const ChatDetail = () => {
   const [activeHover, setActiveHover] = useState<string | null>(null);
@@ -21,78 +22,92 @@ const ChatDetail = () => {
   const [offset, setOffset] = useState(0);
   const limit = 20;
   const [allMessages, setAllMessages] = useState<any[]>([]);
-  const [newMessageLoad, setNewMessageLoad] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [newMessagesNotification, setNewMessagesNotification] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [refetchData, setRefetchData] = useState<any>(null);
+
   const {
     data = { messages: [], pagination: {} },
     isFetching,
     refetch,
   } = useGetMessagesQuery({
     userId,
-    offset: offset,
-    limit: limit,
+    offset,
+    limit,
   });
 
+  // Reset state khi userId đổi
   useEffect(() => {
-    console.log('offset', offset);
-    if (textEndRef.current && offset === 0) {
-      console.log('first scrollTop', textEndRef.current.scrollTop);
-      textEndRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      });
+    setAllMessages([]);
+    setOffset(0);
+    setHasMore(true);
+    setRefetchData(true);
+  }, [userId, setRefetchData]);
+
+  // Khi data mới về, cập nhật refetchData để tránh lỗi stale-while-revalidate
+  useEffect(() => {
+    if (refetchData) {
+      refetch();
+      setOffset(0);
+
+      setRefetchData(null);
     }
-  }, [userId, allMessages, offset]);
+  }, [refetchData, refetch]);
 
+  // Khi data mới về và offset = 0 (lần đầu load hoặc đổi userId), cập nhật allMessages
   useEffect(() => {
-    console.log('oset', offset);
+    if (
+      offset === 0 &&
+      data?.messages &&
+      (allMessages.length !== data.messages.length ||
+        allMessages[0]?._id !== data.messages[0]?._id)
+    ) {
+      setAllMessages(data.messages);
+      setHasMore((data.pagination?.total || 0) > data.messages.length);
+    }
+    // eslint-disable-next-line
+  }, [offset, data.messages]);
 
-    refetch();
-  }, [offset, refetch]);
-  const loadMore = useCallback(async () => {
-    setOffset((offset) => offset + limit);
-  }, []);
-
-  // Khi fetch thêm tin nhắn cũ
+  // Khi offset > 0 (load more), merge thêm messages vào đầu danh sách
   useEffect(() => {
-    if (data?.messages?.length && !newMessageLoad && hasMore) {
+    if (offset > 0 && data?.messages?.length) {
       setAllMessages((prev) => {
-        // Tránh lặp tin nhắn
         const ids = new Set(prev.map((m) => m._id));
         const newMsgs = data.messages.filter((m: any) => !ids.has(m._id));
-        // Nối vào đầu (vì load thêm tin nhắn cũ)
         const merged = [...newMsgs, ...prev];
-        // Sắp xếp theo thời gian tăng dần
         return merged.sort(
           (a, b) =>
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       });
-
-      if (allMessages.length >= data.pagination.total) {
+      // Kiểm tra còn load nữa không
+      if ((data.pagination?.total || 0) <= offset + data.messages.length) {
         setHasMore(false);
       }
     }
-  }, [data, userId, hasMore, allMessages.length, newMessageLoad]);
+    // eslint-disable-next-line
+  }, [data, offset]);
 
-  // Khi gửi tin nhắn mới thành công
-  const handleSendMessageSuccess = (newMessage: any) => {
-    setAllMessages((prev) => {
-      // Tránh lặp tin nhắn
-      if (prev.some((m) => m._id === newMessage._id)) return prev;
-      const merged = [...prev, newMessage];
-      // Sắp xếp lại
-      return merged.sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-    });
-    setTimeout(() => {
-      textEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }, 100);
-  };
+  // Khi offset > 0, chỉ gọi refetch nếu hasMore vẫn còn true
+  useEffect(() => {
+    if (offset > 0 && hasMore) {
+      refetch();
+    }
+  }, [offset, hasMore, refetch]);
 
+  // Scroll xuống cuối khi đổi userId hoặc gửi tin nhắn mới
+  useEffect(() => {
+    if (textEndRef.current && offset === 0) {
+      textEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+    }
+  }, [allMessages, offset, userId]);
+
+  const loadMore = useCallback(() => {
+    setOffset((prev) => prev + limit);
+  }, []);
+
+  // Throttled scroll handler for loading more messages
   const handleScroll = useMemo(
     () =>
       throttle(() => {
@@ -100,37 +115,58 @@ const ChatDetail = () => {
         if (!container || isFetching || !hasMore) return;
         if (container.scrollTop < 200) {
           loadMore();
-          // Giữ vị trí cuộn hợp lý khi load thêm tin nhắn
-          if (offset !== 0) {
-            container.scrollTop += 400;
-          }
+          setTimeout(() => {
+            if (container) container.scrollTop += 400;
+          }, 100);
         }
       }, 300),
-    [isFetching, hasMore, loadMore, offset]
+    [isFetching, hasMore, loadMore]
   );
 
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const groupedMessages = allMessages.reduce((acc: any, message: any) => {
-    // Format time in 5-minute intervals
-    const createdAt = dayjs(message.createdAt);
-    const roundedMinutes = Math.floor(createdAt.minute() / 5) * 5;
-    const formattedDateHour = createdAt
-      .minute(roundedMinutes)
-      .second(0)
-      .format('HH:mm');
+  // Group messages by day or 5-minute interval
+  const groupedMessages = useMemo(() => {
+    return allMessages.reduce((acc: any, message: any) => {
+      const createdAt = dayjs(message.createdAt);
+      const roundedMinutes = Math.floor(createdAt.minute() / 5) * 5;
+      const formattedDateHour = createdAt
+        .minute(roundedMinutes)
+        .second(0)
+        .format('HH:mm');
+      const formattedDateDay = createdAt.format('YYYY-MM-DD');
+      const diff = createdAt.diff(dayjs(), 'day');
+      const date = diff === 0 ? formattedDateHour : formattedDateDay;
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(message);
+      return acc;
+    }, {});
+  }, [allMessages]);
 
-    const formattedDateDay = dayjs(message.createdAt).format('YYYY-MM-DD');
+  // Flatten groupedMessages thành 1 mảng để virtualize
+  const flatMessages = useMemo(() => {
+    const arr: any[] = [];
+    Object.entries(groupedMessages).forEach(([date, messages]: any) => {
+      arr.push({ type: 'date', date });
+      messages.forEach((msg: any) => arr.push({ type: 'msg', ...msg }));
+    });
+    return arr;
+  }, [groupedMessages]);
 
-    const diff = dayjs(message.createdAt).diff(dayjs(), 'day');
-    const date = diff === 0 ? formattedDateHour : formattedDateDay;
-    if (!acc[date]) {
-      acc[date] = [];
+  // TanStack Virtualizer
+  const rowVirtualizer = useVirtualizer({
+    count: flatMessages.length,
+    getScrollElement: () => messagesContainerRef.current,
+    estimateSize: () => 72,
+    overscan: 10,
+  });
+
+  // Tự động scroll tới cuối khi mở chat hoặc đổi userId
+  useEffect(() => {
+    if (offset === 0 && flatMessages.length > 0) {
+      rowVirtualizer.scrollToIndex(flatMessages.length - 1, { align: 'end' });
     }
-    acc[date].push(message);
+  }, [flatMessages.length, offset, userId]);
 
-    return acc;
-  }, {});
-
+  // Attach/detach scroll event
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) {
@@ -144,15 +180,37 @@ const ChatDetail = () => {
     };
   }, [handleScroll]);
 
+  // Listen for new messages via socket
   useEffect(() => {
-    console.log('allMessages', allMessages);
-  }, [allMessages]);
-
-  socket.on('SEND_MESSAGE', () => {
-    if (messagesContainerRef.current) {
+    const handleSocketMessage = () => {
       setNewMessagesNotification(true);
-    }
-  });
+    };
+
+    socket.on('SEND_MESSAGE', handleSocketMessage);
+    return () => {
+      socket.off('SEND_MESSAGE', handleSocketMessage);
+    };
+  }, []);
+
+  // Handle sending new message
+  // const handleSendMessageSuccess = (newMessage: any) => {
+  //   // setAllMessages((prev) => {
+  //   //   if (prev.some((m) => m._id === newMessage._id)) return prev;
+  //   //   const merged = [...prev, newMessage];
+  //   //   return merged.sort(
+  //   //     (a, b) =>
+  //   //       new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  //   //   );
+  //   // });
+
+  //   console.log('Có tin nhắn mới:', newMessage);
+  //   setTimeout(() => {
+  //     if (textEndRef.current) {
+  //       console.log('vô scroll vào cuối');
+  //       textEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+  //     }
+  //   }, 100);
+  // };
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-64px)]">
@@ -170,62 +228,87 @@ const ChatDetail = () => {
           </IconButton>
         </div>
       </div>
-      <div className="rounded-lg p-4 overflow-y-auto flex flex-col  flex-1">
-        {/* Messages will go here */}
-        <div className="flex-1 overflow-y-auto" ref={messagesContainerRef}>
-          {isFetching && offset > 0 && (
-            <div className="text-center text-gray-400 py-2">
-              Đang tải tin nhắn...
-            </div>
-          )}
-          {Object.entries(groupedMessages).map(([date, messages]: any) => (
-            <div key={date} className="mb-4">
-              <div className="text-gray-500 text-sm mb-2 text-center p-4">
-                {date}
-              </div>
-              {messages.map((message: any, index: number) => (
+      <div className="rounded-lg p-4 overflow-y-auto flex flex-col flex-1">
+        <div
+          className="flex-1 overflow-y-auto relative"
+          ref={messagesContainerRef}
+          style={{ height: '100%' }}
+        >
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              position: 'relative',
+              width: '100%',
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const item = flatMessages[virtualRow.index];
+              if (item.type === 'date') {
+                return (
+                  <div
+                    key={virtualRow.index}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                      zIndex: 1,
+                    }}
+                    className="text-gray-500 text-sm mb-2 text-center p-4"
+                  >
+                    {item.date}
+                  </div>
+                );
+              }
+              // Render message như cũ
+              return (
                 <div
-                  key={index}
+                  key={virtualRow.index}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
                   className={`flex items-start mb-2 gap-2  ${
-                    message.sender._id === currentUserId ? 'justify-end' : ''
+                    item.sender._id === currentUserId ? 'justify-end' : ''
                   }`}
                 >
-                  {message.sender._id !== currentUserId && (
-                    <UserAvatar src={message.sender.image} />
+                  {item.sender._id !== currentUserId && (
+                    <UserAvatar src={item.sender.image} />
                   )}
                   <div
                     className={`ml-2 p-2 px-3 rounded-3xl max-w-lg relative min-w-[50px] ${
-                      message.sender._id === currentUserId
+                      item.sender._id === currentUserId
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100'
                     }`}
-                    onMouseEnter={() => setActiveHover(message._id)}
+                    onMouseEnter={() => setActiveHover(item._id)}
                     onMouseLeave={() => setActiveHover(null)}
                   >
-                    <p className="w-full">{message.message}</p>
-                    {activeHover === message._id && (
+                    <p className="w-full">{item.message}</p>
+                    {activeHover === item._id && (
                       <div
                         className={`absolute top-0  bg-gray-200 p-3 rounded-lg text-xs text-gray-400 ${
-                          message.sender._id !== currentUserId
+                          item.sender._id !== currentUserId
                             ? 'right-[-128px]'
                             : '-left-[58px]'
                         }`}
                       >
-                        {/* Example hover actions or info */}
                         <span>
-                          {dayjs().diff(dayjs(message.createdAt), 'day') > 0
-                            ? dayjs(message.createdAt).format(
-                                ' HH:mm, DD:MM:YYYY'
-                              )
-                            : dayjs(message.createdAt).format('HH:mm')}
+                          {dayjs().diff(dayjs(item.createdAt), 'day') > 0
+                            ? dayjs(item.createdAt).format(' HH:mm, DD:MM:YYYY')
+                            : dayjs(item.createdAt).format('HH:mm')}
                         </span>
                       </div>
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
+              );
+            })}
+          </div>
           <div ref={textEndRef} />
         </div>
 
@@ -248,8 +331,7 @@ const ChatDetail = () => {
         <MessageCreation
           userId={userId}
           ref={textEndRef}
-          setNewMessageLoad={setNewMessageLoad}
-          onSendSuccess={handleSendMessageSuccess}
+          // onSendSuccess={handleSendMessageSuccess}
         />
       </div>
     </div>

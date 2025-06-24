@@ -12,9 +12,9 @@ import { socket } from '@context/SocketProvider';
 const MessageCreation = ({
   userId,
   ref,
-  onSendSuccess,
-  setNewMessageLoad,
-}: any) => {
+}: // onSendSuccess,
+// setNewMessageLoad,
+any) => {
   const [newMessage, setNewMessage] = useState('');
   const [markConversationAsSeen] = useMarkConversationAsSeenMutation();
 
@@ -37,10 +37,10 @@ const MessageCreation = ({
       });
 
       // Gọi callback để thêm tin nhắn mới vào cuối danh sách
-      if (onSendSuccess) {
-        onSendSuccess(response);
-        setNewMessageLoad(true);
-      }
+      // if (onSendSuccess) {
+      //   onSendSuccess(response);
+      //   // setNewMessageLoad(true);
+      // }
     }
 
     console.log('message sent:', newMessage, userId);
