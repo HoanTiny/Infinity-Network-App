@@ -1,323 +1,138 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import UserAvatar from '@components/UserAvatar';
-import { useUserInfo } from '@hooks/getUserinfo';
-import { useMediumScreen } from '@hooks/index';
-import { Close } from '@mui/icons-material';
-import { Drawer, IconButton, Typography } from '@mui/material';
-import { toggleDrawer } from '@redux/slice/settingSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useLocation } from 'react-router-dom';
+import { MoreIcon } from "@components/Icon";
+import UserAvatar from "@components/UserAvatar";
+import { useUserInfo } from "@hooks/getUserinfo";
+
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 function Sidebar() {
-  const dispatch = useDispatch();
-  const mediumScreen = useMediumScreen();
   const location = useLocation();
-  const isShowDrawer = useSelector((store: any) => store.settings.IsShowDrawer);
   const userInfo = useUserInfo();
-
-  console.log('store settings: ', userInfo);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
 
-  const SidebarContent = () => {
-    return (
-      <div className="flex-col flex h-[90vh]">
-        {/* Header - chỉ hiện trên mobile */}
-        {mediumScreen && (
-          <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <img src="/img/Logo2.svg" alt="logo" className="w-8 h-8" />
-              <Typography className="text-lg font-semibold text-gray-800">
-                Menu
-              </Typography>
-            </div>
-            <IconButton
-              onClick={() => dispatch(toggleDrawer())}
-              className="hover:bg-gray-100 transition-colors duration-200"
-              size="small"
-            >
-              <Close className="text-gray-600" />
-            </IconButton>
-          </div>
-        )}
+  const navItems = [
+    { icon: "/icons/intagram/home.png", path: "/", title: "Trang chủ" },
+    { icon: "/icons/intagram/video.png", path: "/video", title: "Reels" },
+    {
+      icon: "/icons/intagram/send.png",
+      path: "/messages",
+      badge: 3,
+      title: "Tin nhắn",
+    },
+    { icon: "/icons/intagram/search.png", path: "/search", title: "Tìm kiếm" },
+    {
+      icon: "/icons/intagram/heart.png",
+      path: "/notifications",
+      badge: 10,
+      title: "Thông báo",
+    },
+    {
+      icon: "/icons/intagram/more.png",
+      path: "/create",
+      action: true,
+      title: "Tạo bài viết",
+    },
+  ];
 
-        {/* Main Navigation */}
-        <div className="flex-1 py-2">
-          {/* User Profile Section */}
-          <div className="px-2 mb-4">
-            <Link
-              to={`/user/${userInfo?._id}`}
-              state={{ from: 'sidebar' }}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 group"
-            >
-              <UserAvatar isMyAvatar />
-              <Typography className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
-                {userInfo?.fullName || 'Your Name'}
-              </Typography>
-            </Link>
-          </div>
-
-          {/* Main Menu Items */}
-          <div className="px-2 space-y-1">
-            <Link
-              to="/"
-              className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
-                isActive('/')
-                  ? 'bg-blue-50 border-l-4 border-blue-500'
-                  : 'hover:bg-gray-100'
-              }`}
-            >
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                  isActive('/')
-                    ? 'bg-blue-500'
-                    : 'bg-gray-100 group-hover:bg-blue-100'
-                }`}
-              >
-                <img
-                  src="/icons/news.svg"
-                  alt="News Feed"
-                  className={`w-5 h-5 ${
-                    isActive('/') ? 'filter brightness-0 invert' : ''
-                  }`}
-                />
-              </div>
-              <Typography
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isActive('/')
-                    ? 'text-blue-600'
-                    : 'text-gray-700 group-hover:text-gray-900'
-                }`}
-              >
-                News Feed
-              </Typography>
-            </Link>
-
-            <Link
-              to="/messages"
-              className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
-                isActive('/messages')
-                  ? 'bg-blue-50 border-l-4 border-blue-500'
-                  : 'hover:bg-gray-100'
-              }`}
-            >
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                  isActive('/messages')
-                    ? 'bg-blue-500'
-                    : 'bg-gray-100 group-hover:bg-blue-100'
-                }`}
-              >
-                <img
-                  src="/icons/brand-messenger.svg"
-                  alt="Messenger"
-                  className={`w-5 h-5 ${
-                    isActive('/messages') ? 'filter brightness-0 invert' : ''
-                  }`}
-                />
-              </div>
-              <Typography
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isActive('/messages')
-                    ? 'text-blue-600'
-                    : 'text-gray-700 group-hover:text-gray-900'
-                }`}
-              >
-                Messenger
-              </Typography>
-              {/* Badge for unread messages */}
-              <div className="ml-auto">
-                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
-                  3
-                </span>
-              </div>
-            </Link>
-
-            <Link
-              to={`/user/${userInfo?._id}/friends`}
-              className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
-                isActive('/friends')
-                  ? 'bg-blue-50 border-l-4 border-blue-500'
-                  : 'hover:bg-gray-100'
-              }`}
-            >
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                  isActive('/friends')
-                    ? 'bg-blue-500'
-                    : 'bg-gray-100 group-hover:bg-blue-100'
-                }`}
-              >
-                <img
-                  src="/icons/friends.svg"
-                  alt="Friends"
-                  className={`w-5 h-5 ${
-                    isActive('/friends') ? 'filter brightness-0 invert' : ''
-                  }`}
-                />
-              </div>
-
-              <Typography
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isActive('/friends')
-                    ? 'text-blue-600'
-                    : 'text-gray-700 group-hover:text-gray-900'
-                }`}
-              >
-                Friends
-              </Typography>
-            </Link>
-
-            <Link
-              to="/groups"
-              className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
-                isActive('/groups')
-                  ? 'bg-blue-50 border-l-4 border-blue-500'
-                  : 'hover:bg-gray-100'
-              }`}
-            >
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                  isActive('/groups')
-                    ? 'bg-blue-500'
-                    : 'bg-gray-100 group-hover:bg-blue-100'
-                }`}
-              >
-                <img
-                  src="/icons/groups.svg"
-                  alt="Groups"
-                  className={`w-5 h-5 ${
-                    isActive('/groups') ? 'filter brightness-0 invert' : ''
-                  }`}
-                />
-              </div>
-              <Typography
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isActive('/groups')
-                    ? 'text-blue-600'
-                    : 'text-gray-700 group-hover:text-gray-900'
-                }`}
-              >
-                Groups
-              </Typography>
-            </Link>
-          </div>
-
-          {/* Divider */}
-          <div className="mx-4 my-4 border-t border-gray-200"></div>
-
-          {/* Settings Section */}
-          <div className="px-2">
-            <Typography className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-2">
-              Settings & Privacy
-            </Typography>
-
-            <div className="space-y-1">
-              <Link
-                to={`settings/account`}
-                className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
-                  isActive('settings/account')
-                    ? 'bg-blue-50 border-l-4 border-blue-500'
-                    : 'hover:bg-gray-100'
-                }`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                    isActive('settings/account')
-                      ? 'bg-blue-500'
-                      : 'bg-gray-100 group-hover:bg-blue-100'
-                  }`}
-                >
-                  <img
-                    src="/icons/settings.svg"
-                    alt="Account"
-                    className={`w-5 h-5 ${
-                      isActive('settings/account')
-                        ? 'filter brightness-0 invert'
-                        : ''
-                    }`}
-                  />
-                </div>
-
-                <Typography
-                  className={`text-sm font-medium transition-colors duration-200 
-                        ? 'text-blue-600'
-                        : 'text-gray-700 group-hover:text-gray-900'
-                    }`}
-                >
-                  Account Settings
-                </Typography>
-              </Link>
-
-              <Link
-                to="/languages"
-                className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ${
-                  isActive('/languages')
-                    ? 'bg-blue-50 border-l-4 border-blue-500'
-                    : 'hover:bg-gray-100'
-                }`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-                    isActive('/languages')
-                      ? 'bg-blue-500'
-                      : 'bg-gray-100 group-hover:bg-blue-100'
-                  }`}
-                >
-                  <img
-                    src="/icons/language.svg"
-                    alt="Languages"
-                    className={`w-5 h-5 ${
-                      isActive('/languages') ? 'filter brightness-0 invert' : ''
-                    }`}
-                  />
-                </div>
-                <Typography
-                  className={`text-sm font-medium transition-colors duration-200 ${
-                    isActive('/languages')
-                      ? 'text-blue-600'
-                      : 'text-gray-700 group-hover:text-gray-900'
-                  }`}
-                >
-                  Language & Region
-                </Typography>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer - chỉ hiện trên desktop */}
-        {!mediumScreen && (
-          <div className="px-4 py-3 border-t border-gray-200">
-            <Typography className="text-xs text-gray-500 text-center">
-              © 2024 Your App Name
-            </Typography>
-          </div>
-        )}
-      </div>
-    );
-  };
+  const bottomNavItems = [
+    {
+      icon: "/icons/intagram/settings.png",
+      path: "settings/account",
+      title: "Cài đặt",
+    },
+    {
+      icon: "/icons/intagram/logout.png",
+      path: "#",
+      action: true,
+      title: "Đăng xuất",
+    },
+  ];
 
   return (
-    <>
-      {mediumScreen ? (
-        <Drawer
-          variant="temporary"
-          open={isShowDrawer}
-          onClose={() => dispatch(toggleDrawer())}
-          PaperProps={{
-            className: 'w-80 border-r border-gray-200',
-            style: { width: 320 },
-          }}
-        >
-          <SidebarContent />
-        </Drawer>
-      ) : (
-        <div className="w-80 h-full   sticky top-20">
-          <SidebarContent />
+    <div className="fixed left-0 top-0 h-screen w-[72px] flex flex-col items-center py-4">
+      {/* Logo */}
+      <div className="py-4">
+        <Link to="/">
+          <img src="/img/Logo2.svg" alt="logo" className="w-6 h-6" />
+        </Link>
+      </div>
+
+      {/* Nav Items */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-1 mt-2">
+        {navItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className="nav-item-wrapper relative p-3 rounded-xl transition-all duration-200 hover:bg-gray-100"
+            onClick={(e) => {
+              if (item.action) {
+                e.preventDefault();
+              }
+            }}
+          >
+            <div className="relative">
+              <img src={item.icon} alt={item.title} width={24} height={24} />
+              {item.badge && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                  {item.badge}
+                </span>
+              )}
+            </div>
+            <span className="nav-item-tooltip">{item.title}</span>
+          </Link>
+        ))}
+        <Link to={`/user/${userInfo?._id}`} className="block">
+          <div className="w-7 h-7 rounded-full overflow-hidden">
+            <UserAvatar isMyAvatar size="sm" />
+          </div>
+        </Link>
+      </div>
+
+      {/* Bottom Actions */}
+      <div className="pb-4">
+        <div className="relative">
+          <button
+            className="p-3 rounded-xl transition-all duration-200 hover:bg-gray-100"
+            onClick={() => setIsMoreOpen(!isMoreOpen)}
+          >
+            <MoreIcon width={28} height={28} />
+          </button>
+
+          {/* Expanded menu */}
+          {isMoreOpen && (
+            <div className="absolute bottom-full left-full ml-2 mb-2 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden min-w-[180px]">
+              {bottomNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="block"
+                  onClick={(e) => {
+                    if (item.action) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  <div
+                    className={`group flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all ${
+                      isActive(item.path) ? "bg-gray-50" : ""
+                    }`}
+                  >
+                    <img src={item.icon} alt={item.title} />
+                    <span className="text-sm text-gray-700">
+                      {item.path === "settings/account"
+                        ? "Cài đặt"
+                        : "Đăng xuất"}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }
 

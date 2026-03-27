@@ -12,8 +12,9 @@ import {
   ListItemText,
   Typography,
   Divider,
+  Tooltip,
 } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
 import { useGetNotificationsQuery } from '@services/notificationApi';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -43,11 +44,13 @@ const NotificationsPanel = () => {
 
   return (
     <Box>
-      <IconButton size="large" color="inherit" onClick={handleOpen}>
-        <Badge badgeContent={newCount} color="error">
-          <NotificationsIcon />
-        </Badge>
-      </IconButton>
+      <Tooltip title="Notifications" arrow>
+        <IconButton size="large" onClick={handleOpen} className="hover:bg-gray-100 transition-colors">
+          <Badge badgeContent={newCount} color="error">
+            <NotificationsNoneOutlined className="text-gray-800" />
+          </Badge>
+        </IconButton>
+      </Tooltip>
 
       <Menu
         anchorEl={anchorEl}
@@ -57,28 +60,33 @@ const NotificationsPanel = () => {
           component: Paper,
           elevation: 4,
           sx: {
-            minWidth: 300,
-            maxHeight: 400,
-            borderRadius: 2,
-            overflow: 'auto',
+            minWidth: 368,
+            maxHeight: 500,
+            borderRadius: 3,
+            overflow: 'hidden',
+            border: '1px solid #dbdbdb',
+            mt: 1.5,
+            '& .MuiMenu-list': {
+              p: 0,
+            },
           },
         }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Box sx={{ p: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="subtitle1" fontWeight={600}>
+        <Box sx={{ p: 3, pb: 2, borderBottom: '1px solid #efefef' }}>
+          <Typography variant="h6" fontWeight={600} fontSize={16}>
             Notifications
           </Typography>
         </Box>
 
-        <List disablePadding>
+        <List disablePadding sx={{ p: 0 }}>
           {notifications.length === 0 && (
             <ListItemButton
               onClick={handleClose}
-              sx={{ justifyContent: 'center' }}
+              sx={{ justifyContent: 'center', py: 4 }}
             >
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" fontSize={14}>
                 No new notifications
               </Typography>
             </ListItemButton>
@@ -90,21 +98,10 @@ const NotificationsPanel = () => {
                 <Box key={note._id}>
                   <ListItemButton
                     onClick={() => {
-                      // dispatch(
-                      //   openDialog({
-                      //     title: `Bài viết của ${note.author?.fullName}`,
-                      //     content: 'POST_DETAIL_DIALOG',
-                      //     data: note,
-
-                      //     actions: 'Post',
-                      //     maxWidth: 'md',
-                      //     fullWidth: true,
-                      //   })
-                      // );
                       handleClose();
                       if (note.like || note.comment) {
                         navigate(`/posts/${note.post}`, {
-                          state: { background: location }, // Lưu lại trang hiện tại
+                          state: { background: location },
                         });
                       } else {
                         navigate(`messages/${note.author._id}`);
@@ -112,18 +109,24 @@ const NotificationsPanel = () => {
                     }}
                     sx={{
                       alignItems: 'flex-start',
-                      backgroundColor: note.seen
-                        ? 'background.paper'
-                        : 'action.hover',
-                      px: 2,
-                      py: 1.5,
+                      backgroundColor: note.seen ? '#fff' : '#fafafa',
+                      px: 3,
+                      py: 2,
+                      '&:hover': {
+                        backgroundColor: note.seen ? '#fafafa' : '#f0f0f0',
+                      },
                     }}
                   >
                     <ListItemAvatar>
-                      <UserAvatar
-                        src={note.author?.image}
-                        fullName={note.author?.fullName}
-                      />
+                      <div className="story-ring p-0.5">
+                        <div className="bg-white p-0.5 rounded-full">
+                          <UserAvatar
+                            src={note.author?.image}
+                            fullName={note.author?.fullName}
+                            size="md"
+                          />
+                        </div>
+                      </div>
                     </ListItemAvatar>
 
                     <ListItemText
@@ -131,12 +134,23 @@ const NotificationsPanel = () => {
                         <Typography
                           variant="body2"
                           fontWeight={note.seen ? 400 : 600}
+                          fontSize={14}
+                          sx={{
+                            display: 'inline',
+                          }}
                         >
                           <Link
                             to={`/user/${note.author?._id}`}
-                            style={{ textDecoration: 'none', color: 'inherit' }}
+                            style={{ textDecoration: 'none', color: 'inherit', fontWeight: note.seen ? 400 : 600 }}
                           >
                             {note.author?.fullName}{' '}
+                          </Link>
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            fontWeight={note.seen ? 400 : 600}
+                            fontSize={14}
+                          >
                             {note.like
                               ? 'liked your post'
                               : note.comment
@@ -144,15 +158,32 @@ const NotificationsPanel = () => {
                               : note.message
                               ? 'sent you a message'
                               : 'reacted to your post'}{' '}
-                          </Link>
+                          </Typography>
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="primary"
+                            fontSize={12}
+                            sx={{
+                              ml: 0.5,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            View
+                          </Typography>
                         </Typography>
                       }
                       secondary={
-                        <Typography variant="caption" color="text.secondary">
-                          {/* {new Date(note.createdAt).toLocaleString()} */}
+                        <Typography variant="caption" color="text.secondary" fontSize={12}>
                           <TimeAgo date={note.createdAt} />
                         </Typography>
                       }
+                      sx={{
+                        ml: 2,
+                        '& .MuiListItemText-secondary': {
+                          mt: 0.5,
+                        },
+                      }}
                     />
 
                     {!note.seen && (
@@ -161,12 +192,12 @@ const NotificationsPanel = () => {
                         color="error"
                         sx={{
                           '& .MuiBadge-badge': { right: 4, top: 16 },
-                          marginLeft: '21px',
+                          marginLeft: 'auto',
                         }}
                       />
                     )}
                   </ListItemButton>
-                  <Divider component="li" sx={{ my: 0 }} />
+                  <Divider component="li" sx={{ my: 0, ml: 14 }} />
                 </Box>
               )
           )}

@@ -1,167 +1,69 @@
-import NotificationsPaenl from '@components/NotificationsPanel.tsx';
+import NotificationsPanel from '@components/NotificationsPanel.tsx';
 import UserAvatar from '@components/UserAvatar';
 import { useUserInfo } from '@hooks/getUserinfo';
 import { useMediumScreen } from '@hooks/index';
-import { useLogout } from '@hooks/useLogout';
-import { Search } from '@mui/icons-material';
-import MenuIcon from '@mui/icons-material/Menu';
-import {
-  AppBar,
-  Box,
-  IconButton,
-  Menu,
-  MenuItem,
-  TextField,
-  //   TextField,
-  Toolbar,
-} from '@mui/material';
-import { onpenDrawer } from '@redux/slice/settingSlice';
-import React from 'react';
-import { useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { AddBoxOutlined, MailOutline } from '@mui/icons-material';
+import { IconButton, Tooltip } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
 function Header() {
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const mediumScreen = useMediumScreen();
-  console.log('mediumScreen', mediumScreen);
-  // Dispatch
-  const dispatch = useDispatch();
-  const isMenuOpen = Boolean(anchorEl);
   const infoUser = useUserInfo();
-  const logout = useLogout();
 
-  // State
-  const [searchValue, setSearchValue] = React.useState('');
-
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleSearchChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setSearchValue((event.target as HTMLInputElement).value);
-    console.log('Search value', searchValue);
-  };
-
-  const menuId = 'primary-search-account-menu';
-  const renderMenu = (
-    <Menu
-      anchorEl={anchorEl}
-      id={menuId}
-      keepMounted
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      open={isMenuOpen}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={handleMenuClose}>
-        <Link to={`/user/${infoUser._id}`}>Profile</Link>
-      </MenuItem>
-      <MenuItem
-        onClick={() => {
-          logout();
-        }}
-      >
-        Log out
-      </MenuItem>
-    </Menu>
-  );
+  // Nếu là mobile, không hiển thị gì vì đã có sidebar drawer
+  if (mediumScreen) {
+    return null;
+  }
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" color="default" className="">
-        <Toolbar className="!min-h-fit justify-between">
-          {/* Logo1 */}
-          <div className="flex items-center gap-4">
-            {mediumScreen ? (
-              <IconButton
-                size="small"
-                edge="start"
-                aria-label="menu"
-                color="inherit"
-              >
-                <MenuIcon
-                  onClick={() => {
-                    dispatch(onpenDrawer());
-                  }}
-                />
-              </IconButton>
-            ) : (
-              <>
-                <a href="/">
-                  <img src="/img/Logo2.svg" alt="logo" className="w-8 h-8" />
-                </a>
-                <div className="flex items-center gap-1">
-                  <Search />
-                  {/* <Input placeholder="Search" /> */}
-                  <TextField
-                    variant="standard"
-                    placeholder="Search..."
-                    name="search"
-                    slotProps={{
-                      input: { className: 'h-10 px-3 py-2' },
-                      htmlInput: { className: '!p-0' },
-                    }}
-                    sx={{
-                      '.MuiInputBase-root::before': {
-                        display: 'none',
-                      },
-                    }}
-                    onChange={(e) => {
-                      handleSearchChange(e);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        navigate(`/search/users`, {
-                          state: { searchQuery: searchValue },
-                        });
-                      }
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
+    <div className="fixed top-0 right-0 left-60 h-16 bg-white border-b border-gray-100 z-40">
+      <div className="max-w-5xl mx-auto px-6 h-full flex items-center justify-between">
+        {/* Empty left side */}
+        <div className="flex-1"></div>
 
-          <div className="flex items-center gap-2">
-            {mediumScreen && (
-              <IconButton>
-                <Search />
-              </IconButton>
-            )}
-
-            <NotificationsPaenl />
-
+        {/* Right Icons - Instagram Style */}
+        <div className="flex items-center gap-1">
+          {/* Create */}
+          <Tooltip title="Create" arrow>
             <IconButton
-              size="large"
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
+              className="hover:bg-gray-100 transition-colors"
+              onClick={() => {
+                // Open create post
+              }}
             >
-              {/* <Avatar sx={{ bgcolor: '#246AA3 ' }} src={infoUser.image}>
-                {infoUser.fullName?.[0]}
-              </Avatar> */}
-              <UserAvatar isMyAvatar={true} />
+              <AddBoxOutlined className="text-gray-800" />
             </IconButton>
-          </div>
-        </Toolbar>
-      </AppBar>
-      {renderMenu}
-    </Box>
+          </Tooltip>
+
+          {/* Messages */}
+          <Tooltip title="Messages" arrow>
+            <IconButton
+              className="hover:bg-gray-100 transition-colors relative"
+              onClick={() => navigate('/messages')}
+            >
+              <MailOutline className="text-gray-800" />
+              <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                3
+              </span>
+            </IconButton>
+          </Tooltip>
+
+          {/* Notifications */}
+          <NotificationsPanel />
+
+          {/* Profile */}
+          <Tooltip title="Profile" arrow>
+            <IconButton
+              className="hover:bg-gray-100 transition-colors"
+              onClick={() => navigate(`/user/${infoUser._id}`)}
+            >
+              <UserAvatar isMyAvatar={true} size="sm" />
+            </IconButton>
+          </Tooltip>
+        </div>
+      </div>
+    </div>
   );
 }
 

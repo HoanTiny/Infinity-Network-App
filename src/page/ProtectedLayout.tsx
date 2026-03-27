@@ -1,4 +1,3 @@
-import Header from '@components/Header';
 import Loading from '@components/Loading';
 import SocketProvider from '@context/SocketProvider';
 import { saveUserinfo } from '@redux/slice/authSlice';
@@ -34,9 +33,9 @@ function Protectedlayout() {
   return (
     <SocketProvider>
       <div>
-        <div className="sticky top-0 z-10">
+        {/* <div className="sticky top-0 z-10">
           <Header />
-        </div>
+        </div> */}
         <Outlet />
       </div>
     </SocketProvider>

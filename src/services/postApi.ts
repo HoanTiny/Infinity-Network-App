@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // import { PostProps, PostsApiResponse } from '@components/PostList/Post';
-import { RootState } from '@redux/store';
-import { rootApi } from './rootApi';
-import { createEntityAdapter } from '@reduxjs/toolkit';
-import { PostResponsive, RawPost } from 'src/ultil/type';
+import { RootState } from "@redux/store";
+import { rootApi } from "./rootApi";
+import { createEntityAdapter } from "@reduxjs/toolkit";
+import { PostResponsive, RawPost } from "src/ultil/type";
 
 type CachingPair =
-  | ['getPosts', 'allPosts']
-  | ['getPostsByAuthorId', { userId: any }];
+  | ["getPosts", "allPosts"]
+  | ["getPostsByAuthorId", { userId: any }];
 
 const postsAdapter = createEntityAdapter({
   selectId: (post: any) => post._id,
@@ -42,8 +42,8 @@ export const postApi = rootApi.injectEndpoints({
     return {
       createPost: builder.mutation({
         query: (formData) => ({
-          url: 'posts',
-          method: 'POST',
+          url: "posts",
+          method: "POST",
           body: formData,
         }),
 
@@ -57,7 +57,7 @@ export const postApi = rootApi.injectEndpoints({
          Chúng ta cũng có thể sử dụng `patchResult.undo()` để hoàn tác thay đổi nếu có lỗi xảy ra trong quá trình cập nhật cache. */
 
         async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
-          console.log('cvh', args);
+          console.log("cvh", args);
           const store = getState() as RootState;
           // Ensure userInfo is typed correctly
           const userInfo = store.auth.userInfo as {
@@ -70,7 +70,7 @@ export const postApi = rootApi.injectEndpoints({
             _id: tempId,
             likes: [],
             comments: [],
-            content: args.get('content'),
+            content: args.get("content"),
             author: {
               notifications: [],
               _id: userInfo._id,
@@ -83,16 +83,16 @@ export const postApi = rootApi.injectEndpoints({
 
           const userProfilePostsArgs = postApi.util.selectCachedArgsForQuery(
             store,
-            'getPostsByAuthorId'
+            "getPostsByAuthorId",
           );
 
           const patchResults = [] as any[];
           const cachingPairs: CachingPair[] = [
             ...userProfilePostsArgs.map(
               (arg: any) =>
-                ['getPostsByAuthorId', { userId: arg.userId }] as CachingPair
+                ["getPostsByAuthorId", { userId: arg.userId }] as CachingPair,
             ),
-            ['getPosts', 'allPosts'],
+            ["getPosts", "allPosts"],
           ];
 
           cachingPairs.forEach(([endpoint, key]) => {
@@ -100,13 +100,13 @@ export const postApi = rootApi.injectEndpoints({
               postApi.util.updateQueryData(endpoint, key, (draft) => {
                 postsAdapter.addOne(draft, newPost as any);
                 postsAdapter.addOne(draft, newPost as any);
-              })
+              }),
             );
             patchResults.push(patchResult);
           });
           try {
             const { data } = await queryFulfilled;
-            console.log('data333', { data });
+            console.log("data333", { data });
             cachingPairs.forEach(([endpoint, key]) => {
               dispatch(
                 postApi.util.updateQueryData(endpoint, key, (draft) => {
@@ -121,14 +121,14 @@ export const postApi = rootApi.injectEndpoints({
                   // }
 
                   console.log(
-                    'Draft before removing tempId:',
+                    "Draft before removing tempId:",
                     JSON.parse(JSON.stringify(draft)),
-                    tempId
+                    tempId,
                   );
 
                   postsAdapter.removeOne(draft, tempId as any);
                   postsAdapter.addOne(draft, data as any);
-                })
+                }),
               );
             });
           } catch {
@@ -148,7 +148,7 @@ export const postApi = rootApi.injectEndpoints({
       getPosts: builder.query<PostResponsive, any>({
         query: ({ limit, offset } = {}) => {
           return {
-            url: '/posts',
+            url: "/posts",
             params: {
               limit,
               offset,
@@ -161,7 +161,7 @@ export const postApi = rootApi.injectEndpoints({
         // entities: Một object mà mỗi key là ID của bài viết, và value là dữ liệu tương ứng của bài viết đó.
         transformResponse: (response: RawPost[]): PostResponsive => {
           const updatedState = postsAdapter.upsertMany(initialState, response);
-          console.log('updatedState', updatedState);
+          console.log("updatedState", updatedState);
           // return updatedState.ids.map(
           //   (id) => updatedState.entities[id]
           // ) as PostProps[];
@@ -169,7 +169,7 @@ export const postApi = rootApi.injectEndpoints({
           return updatedState;
         },
 
-        serializeQueryArgs: () => 'allPosts',
+        serializeQueryArgs: () => "allPosts",
         merge: (currentCache, newItems) => {
           // Gộp dữ liệu từ request trước đó + với dữ liệu mới sau này, nó luôn đảm bảo
           // rằng dữ liệu trong redux luôn là mới nhất và không bị trùng lặp vì
@@ -180,10 +180,11 @@ export const postApi = rootApi.injectEndpoints({
           // );
 
           return postsAdapter.upsertMany(currentCache, newItems.entities);
+          thê;
           // return updatedState;
         },
 
-        providesTags: [{ type: 'POSTS' }],
+        providesTags: [{ type: "POSTS" }],
       }),
       getPostsById: builder.query<any, any>({
         query: (postId) => {
@@ -191,7 +192,7 @@ export const postApi = rootApi.injectEndpoints({
             url: `/posts/${postId}`,
           };
         },
-        providesTags: [{ type: 'POSTS' }],
+        providesTags: [{ type: "POSTS" }],
       }),
       getPostsByAuthorId: builder.query<PostResponsive, any>({
         query: ({ limit, offset, userId } = {}) => {
@@ -217,9 +218,9 @@ export const postApi = rootApi.injectEndpoints({
         }): PostResponsive => {
           const updatedState = postsAdapter.upsertMany(
             initialState,
-            response.posts
+            response.posts,
           );
-          console.log('updatedState', updatedState);
+          console.log("updatedState", updatedState);
           // return updatedState.ids.map(
           //   (id) => updatedState.entities[id]
           // ) as PostProps[];
@@ -254,24 +255,24 @@ export const postApi = rootApi.injectEndpoints({
           return result?.posts
             ? [
                 ...result.posts.map(({ _id }: any) => ({
-                  type: 'GET_POSTS_BY_AUTHOR_ID',
+                  type: "GET_POSTS_BY_AUTHOR_ID",
                   id: _id,
                 })),
-                { type: 'GET_POSTS_BY_AUTHOR_ID', id: 'LIST' },
+                { type: "GET_POSTS_BY_AUTHOR_ID", id: "LIST" },
               ]
-            : [{ type: 'GET_POSTS_BY_AUTHOR_ID', id: 'LIST' }];
+            : [{ type: "GET_POSTS_BY_AUTHOR_ID", id: "LIST" }];
         },
       }),
       likePost: builder.mutation({
         query: (postId) => {
           return {
             url: `/posts/${postId}/like`,
-            method: 'POST',
+            method: "POST",
           };
         },
-        invalidatesTags: ['POSTS'],
+        invalidatesTags: ["POSTS"],
         async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
-          console.log('cvh', args);
+          console.log("cvh", args);
           // const store = getState() as unknown as {
           //   auth: { userInfo: { _id: string; fullName: string } };
           // };
@@ -285,16 +286,16 @@ export const postApi = rootApi.injectEndpoints({
 
           const userProfilePostsArgs = postApi.util.selectCachedArgsForQuery(
             store,
-            'getPostsByAuthorId'
+            "getPostsByAuthorId",
           );
 
           const patchResults = [] as any[];
           const cachingPairs: CachingPair[] = [
             ...userProfilePostsArgs.map(
               (arg: any) =>
-                ['getPostsByAuthorId', { userId: arg.userId }] as CachingPair
+                ["getPostsByAuthorId", { userId: arg.userId }] as CachingPair,
             ),
-            ['getPosts', 'allPosts'],
+            ["getPosts", "allPosts"],
           ];
           console.log({ cachingPairs });
 
@@ -312,7 +313,7 @@ export const postApi = rootApi.injectEndpoints({
                     _id: tempId,
                   });
                 }
-              })
+              }),
             );
 
             patchResults.push(patchResult);
@@ -342,7 +343,7 @@ export const postApi = rootApi.injectEndpoints({
                       return like;
                     });
                   }
-                })
+                }),
               );
             });
           } catch (err) {
@@ -357,12 +358,12 @@ export const postApi = rootApi.injectEndpoints({
         query: (postId) => {
           return {
             url: `/posts/${postId}/like`,
-            method: 'DELETE',
+            method: "DELETE",
           };
         },
-        invalidatesTags: ['POSTS'],
+        invalidatesTags: ["POSTS"],
         async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
-          console.log('first', args);
+          console.log("first", args);
 
           const store = getState() as unknown as {
             auth: { userInfo: { _id: string; fullName: string } };
@@ -371,23 +372,23 @@ export const postApi = rootApi.injectEndpoints({
 
           // Optimistic update: Remove the like from the post
           const patchResult = dispatch(
-            postApi.util.updateQueryData('getPosts', 'allPosts', (draft) => {
+            postApi.util.updateQueryData("getPosts", "allPosts", (draft) => {
               const currentPost = draft.ids
                 .map((id) => draft.entities[id])
                 .find((post: any) => post?._id === args);
 
               if (currentPost) {
                 currentPost.likes = currentPost.likes.filter(
-                  (like: any) => like.author._id !== userId
+                  (like: any) => like.author._id !== userId,
                 );
               }
-            })
+            }),
           );
           try {
             const { data } = await queryFulfilled;
-            console.log('Dislike successful', data);
+            console.log("Dislike successful", data);
           } catch {
-            console.log('error');
+            console.log("error");
             patchResult.undo();
           }
         },
@@ -396,13 +397,13 @@ export const postApi = rootApi.injectEndpoints({
         query: ({ postId, comment }) => {
           return {
             url: `/posts/${postId}/comments`,
-            method: 'POST',
+            method: "POST",
             body: {
               comment: comment,
             },
           };
         },
-        invalidatesTags: ['POSTS'],
+        invalidatesTags: ["POSTS"],
         async onQueryStarted(arg, { dispatch, queryFulfilled, getState }) {
           // console.log('first', arg);
 
@@ -427,16 +428,16 @@ export const postApi = rootApi.injectEndpoints({
 
           const userProfilePostsArgs = postApi.util.selectCachedArgsForQuery(
             store,
-            'getPostsByAuthorId'
+            "getPostsByAuthorId",
           );
 
           const patchResults = [] as any[];
           const cachingPairs = [
             ...userProfilePostsArgs.map((arg: any) => [
-              'getPostsByAuthorId',
+              "getPostsByAuthorId",
               { userId: arg.userId },
             ]),
-            ['getPosts', 'allPosts'],
+            ["getPosts", "allPosts"],
           ];
 
           cachingPairs.forEach(([endpoint, key]) => {
@@ -449,7 +450,7 @@ export const postApi = rootApi.injectEndpoints({
                 if (currentPost) {
                   currentPost.comments.push(optimisticComment as any);
                 }
-              })
+              }),
             );
             patchResults.push(patchResult);
           });
@@ -467,17 +468,17 @@ export const postApi = rootApi.injectEndpoints({
                     .find((post: any) => post?._id === arg.postId);
                   if (currentPost) {
                     const index = currentPost.comments.findIndex(
-                      (comment: any) => comment._id === optimisticComment._id
+                      (comment: any) => comment._id === optimisticComment._id,
                     );
                     if (index !== -1) {
                       currentPost.comments[index] = data;
                     }
                   }
-                })
+                }),
               );
             });
           } catch (error) {
-            console.log('error', error);
+            console.log("error", error);
             patchResults.forEach((patchResult) => {
               patchResult.undo();
             });
