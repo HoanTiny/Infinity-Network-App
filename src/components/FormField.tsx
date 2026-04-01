@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { Control, Controller, FieldError } from 'react-hook-form';
+import { Control, Controller } from 'react-hook-form';
 
 type FormFieldProps = {
   name: string;
@@ -10,7 +10,7 @@ type FormFieldProps = {
   type: string;
   className: string;
   placeholder: string;
-  error?: FieldError; // Cập nhật kiểu tại đây
+  error?: any; // Cập nhật kiểu tại đây
 };
 
 function FormField({

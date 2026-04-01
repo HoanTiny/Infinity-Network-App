@@ -19,7 +19,7 @@ function OTPVerifyPage() {
     useVerifyOTPMutation();
 
   function onSubmit(formData: any) {
-    console.log(`data`, { formData });
+    // console.log(`data`, { formData });
     verifyOTP({
       otp: formData.otp,
       email: location?.state?.email,
@@ -39,7 +39,7 @@ function OTPVerifyPage() {
       );
     }
   }, [isSuccess, isError, data, dispatch, error, navigate]);
-  console.log(isLoading, data, isSuccess, isError, error, location);
+  // console.log(isLoading, data, isSuccess, isError, error, location);
 
   return (
     <div className="flex flex-col gap-6 w-full">

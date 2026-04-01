@@ -34,7 +34,7 @@ function RegisterPage() {
   const dispatch = useDispatch();
 
   function onSubmit(formData: any) {
-    console.log(`data`, { formData });
+    // console.log(`data`, { formData });
     register(formData);
   }
 

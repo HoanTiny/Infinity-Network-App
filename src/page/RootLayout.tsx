@@ -7,6 +7,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeSnackbar } from '@redux/slice/snackbar';
+import { ToastContainer } from 'react-toastify';
 
 function RootLayout() {
   const dispatch = useDispatch();
@@ -34,6 +35,7 @@ function RootLayout() {
           {message}
         </Alert>
       </Snackbar>
+      <ToastContainer />
     </div>
   );
 }

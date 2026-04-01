@@ -1,9 +1,10 @@
-import Header from '@components/Header';
+import Loading from '@components/Loading';
+import SocketProvider from '@context/SocketProvider';
 import { saveUserinfo } from '@redux/slice/authSlice';
 import { useGetAuthUserQuery } from '@services/rootApi';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 function Protectedlayout() {
   const dispatch = useDispatch();
@@ -13,27 +14,31 @@ function Protectedlayout() {
     error?: { code: number };
     isSuccess: boolean;
   };
-  console.log({ response });
+  // console.log({ response });
 
   useEffect(() => {
     if (response.isSuccess) {
-      console.log('User is logged in');
+      // console.log('User is logged in');
       dispatch(saveUserinfo(response.data));
     }
   }, [response.isSuccess, response.data, dispatch]);
 
-  if (response.error?.code === 401) {
-    return <Navigate to="/login" />;
-  }
+  // if (response.error?.code === 401) {
+  //   return <Navigate to="/login" />;
+  // }
 
   if (response.isLoading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
   return (
-    <>
-      <Header />
-      <Outlet />
-    </>
+    <SocketProvider>
+      <div>
+        {/* <div className="sticky top-0 z-10">
+          <Header />
+        </div> */}
+        <Outlet />
+      </div>
+    </SocketProvider>
   );
 }
 

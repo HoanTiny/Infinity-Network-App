@@ -1,8 +1,9 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import tseslint from 'typescript-eslint'
+import js from '@eslint/js';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import tseslint from 'typescript-eslint';
+import pluginJest from 'eslint-plugin-jest';
 
 export default tseslint.config(
   { ignores: ['dist'] },
@@ -25,4 +26,21 @@ export default tseslint.config(
       ],
     },
   },
-)
+
+  {
+    // update this to match your test files
+    files: ['**/*.spec.js', '**/*.test.js', '**/*.{ts,tsx}'],
+    ...pluginJest.configs['flat/recommended'],
+    // plugins: { jest: pluginJest },
+    // languageOptions: {
+    //   globals: pluginJest.environments.globals.globals,
+    // },
+    // rules: {
+    //   'jest/no-disabled-tests': 'warn',
+    //   'jest/no-focused-tests': 'error',
+    //   'jest/no-identical-title': 'error',
+    //   'jest/prefer-to-have-length': 'warn',
+    //   'jest/valid-expect': 'error',
+    // },
+  }
+);

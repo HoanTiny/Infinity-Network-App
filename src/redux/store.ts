@@ -3,6 +3,7 @@ import authReducer from './slice//authSlice';
 import { rootApi } from '@services/rootApi';
 import snackbarReducer from './slice/snackbar';
 import settingsReducer from './slice/settingSlice';
+import dialogReducer from './slice/dialogSlice';
 import {
   FLUSH,
   PAUSE,
@@ -21,13 +22,14 @@ const persistConfig = {
   key: 'root',
   version: 1,
   storage,
-  blacklist: [rootApi.reducerPath],
+  blacklist: [rootApi.reducerPath, 'dialog', 'settings'],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   snackbar: snackbarReducer,
   settings: settingsReducer,
+  dialog: dialogReducer,
   [rootApi.reducerPath]: rootApi.reducer,
 });
 
@@ -47,7 +49,7 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 
 // Infer the `RootState`,  `AppDispatch`, and `AppStore` types from the store itself
-// export type RootState = ReturnType<typeof store.getState>
+export type RootState = ReturnType<typeof store.getState>;
 // // Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
-// export type AppDispatch = typeof store.dispatch
-// export type AppStore = typeof store
+export type AppDispatch = typeof store.dispatch;
+export type AppStore = typeof store;

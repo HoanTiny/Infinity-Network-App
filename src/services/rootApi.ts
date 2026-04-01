@@ -25,14 +25,14 @@
 
 // export const { useRegisterMutation } = rootApi;
 
-import { logOut } from '@redux/slice/authSlice';
+import { login, logOut } from '@redux/slice/authSlice';
 // import { persistor } from '@redux/store';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { SearchUsersResponse } from 'src/ultil/type';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   prepareHeaders: (headers, { getState }) => {
-    console.log({ store: getState() });
     const token = (getState() as { auth: { accessToken: string } }).auth
       .accessToken;
     if (token) {
@@ -44,10 +44,48 @@ const baseQuery = fetchBaseQuery({
 const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
   const result = await baseQuery(args, api, extraOptions);
   if (result.error?.status === 401) {
-    // dispatch(logout());
-    api.dispatch(logOut());
-    // await persistor.purge();
-    window.location.href = '/login';
+    if (
+      (result.error.data as { message: string })?.message ===
+      'Token has expired.'
+    ) {
+      const refreshToken = (
+        api.getState() as { auth: { refreshToken: string } }
+      ).auth.refreshToken;
+
+      if (refreshToken) {
+        const refreshResult = await baseQuery(
+          {
+            url: '/refresh-token',
+            method: 'POST',
+            body: {
+              refreshToken,
+            },
+          },
+          api,
+          extraOptions
+        );
+
+        const newAccessToken = (refreshResult.data as { accessToken: string })
+          ?.accessToken;
+
+        if (newAccessToken) {
+          api.dispatch(
+            login({
+              accessToken: newAccessToken,
+              refreshToken,
+            })
+          );
+
+          return baseQuery(args, api, extraOptions);
+        } else {
+          api.dispatch(logOut());
+          window.location.href = '/login';
+        }
+      }
+    } else {
+      api.dispatch(logOut());
+      window.location.href = '/login';
+    }
   }
   return result;
 };
@@ -55,6 +93,19 @@ const baseQueryForceLogout = async (args: any, api: any, extraOptions: any) => {
 export const rootApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryForceLogout,
+  tagTypes: [
+    'POSTS',
+    'USERS',
+    '0',
+    'PENDING_FRIENDS_REQUEST',
+    'GET_USER_INFO_BY_ID',
+    'GET_AUTH_USER',
+    'MESSAGES',
+    'CONVERSATIONS',
+  ],
+  // refetchOnMountOrArgChange: 5,
+  // refetchOnFocus: true, // Tự động gọi lại API khi cửa sổ/tab ứng dụng lấy lại trạng thái focus
+  // refetchOnReconnect: true, // Tự động gọi lại API khi kết nối mạng được khôi phục
   endpoints: (builder) => ({
     register: builder.mutation({
       query: ({ fullName, email, password }) => ({
@@ -77,6 +128,15 @@ export const rootApi = createApi({
         },
       }),
     }),
+    refeshToken: builder.mutation({
+      query: (refreshToken) => ({
+        url: 'refresh-token',
+        method: 'POST',
+        body: {
+          refreshToken,
+        },
+      }),
+    }),
     verifyOTP: builder.mutation({
       query: ({ email, otp }) => ({
         url: 'verify-otp',
@@ -87,9 +147,59 @@ export const rootApi = createApi({
         },
       }),
     }),
+    forgotPassword: builder.mutation({
+      query: ({ email }) => ({
+        url: 'forgot-password',
+        method: 'POST',
+        body: {
+          email,
+        },
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: ({ email, token, password }) => ({
+        url: 'reset-password',
+        method: 'POST',
+        body: {
+          email,
+          token,
+          password,
+        },
+      }),
+    }),
+
     getAuthUser: builder.query<void, void>({
       // <void, void>
       query: () => '/auth-user',
+      providesTags: [{ type: 'GET_AUTH_USER' }],
+    }),
+
+    searchUsers: builder.query<
+      SearchUsersResponse,
+      { limit?: number; offset?: number; searchQuery?: string }
+    >({
+      query: ({ limit, offset, searchQuery } = {}) => {
+        const encodedSearchQuery = encodeURIComponent(
+          searchQuery?.trim() || ''
+        );
+        return {
+          url: `/search/users/${encodedSearchQuery}`,
+          params: {
+            limit,
+            offset,
+          },
+        };
+      },
+      providesTags: (result: any) =>
+        result
+          ? [
+              ...result.users.map(({ _id }: any) => ({
+                type: 'USERS',
+                id: _id,
+              })),
+              { type: 'USERS', id: 'LIST' },
+            ]
+          : [{ type: 'USERS', id: 'LIST' }],
     }),
   }),
 });
@@ -99,4 +209,8 @@ export const {
   useLoginMutation,
   useVerifyOTPMutation,
   useGetAuthUserQuery,
+  useRefeshTokenMutation,
+  useSearchUsersQuery,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } = rootApi;

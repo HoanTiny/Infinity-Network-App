@@ -1,105 +1,69 @@
+import NotificationsPanel from '@components/NotificationsPanel.tsx';
+import UserAvatar from '@components/UserAvatar';
 import { useUserInfo } from '@hooks/getUserinfo';
-import { useLogout } from '@hooks/useLogout';
-import { Search } from '@mui/icons-material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import {
-  AppBar,
-  Avatar,
-  Badge,
-  Box,
-  IconButton,
-  Input,
-  Menu,
-  MenuItem,
-  //   TextField,
-  Toolbar,
-} from '@mui/material';
-import React from 'react';
+import { useMediumScreen } from '@hooks/index';
+import { AddBoxOutlined, MailOutline } from '@mui/icons-material';
+import { IconButton, Tooltip } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+
 function Header() {
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
-  const isMenuOpen = Boolean(anchorEl);
+  const navigate = useNavigate();
+  const mediumScreen = useMediumScreen();
   const infoUser = useUserInfo();
-  const logout = useLogout();
 
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const menuId = 'primary-search-account-menu';
-  const renderMenu = (
-    <Menu
-      anchorEl={anchorEl}
-      id={menuId}
-      keepMounted
-      anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      open={isMenuOpen}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem
-        onClick={() => {
-          logout();
-        }}
-      >
-        Log out
-      </MenuItem>
-    </Menu>
-  );
+  // Nếu là mobile, không hiển thị gì vì đã có sidebar drawer
+  if (mediumScreen) {
+    return null;
+  }
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" color="default" className="">
-        <Toolbar className="!min-h-fit justify-between">
-          {/* Logo1 */}
-          <div className="flex items-center gap-4">
-            <img src="/img/Logo2.svg" alt="logo" className="w-8 h-8" />
-            <div className="flex items-center gap-1">
-              <Search />
-              <Input placeholder="Search" />
-            </div>
-          </div>
+    <div className="fixed top-0 right-0 left-60 h-16 bg-white border-b border-gray-100 z-40">
+      <div className="max-w-5xl mx-auto px-6 h-full flex items-center justify-between">
+        {/* Empty left side */}
+        <div className="flex-1"></div>
 
-          <div>
+        {/* Right Icons - Instagram Style */}
+        <div className="flex items-center gap-1">
+          {/* Create */}
+          <Tooltip title="Create" arrow>
             <IconButton
-              size="large"
-              aria-label="show 17 new notifications"
-              color="inherit"
+              className="hover:bg-gray-100 transition-colors"
+              onClick={() => {
+                // Open create post
+              }}
             >
-              <Badge badgeContent={17} color="error">
-                <NotificationsIcon />
-              </Badge>
+              <AddBoxOutlined className="text-gray-800" />
             </IconButton>
+          </Tooltip>
 
+          {/* Messages */}
+          <Tooltip title="Messages" arrow>
             <IconButton
-              size="large"
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
+              className="hover:bg-gray-100 transition-colors relative"
+              onClick={() => navigate('/messages')}
             >
-              <Avatar sx={{ bgcolor: '#246AA3 ' }}>
-                {infoUser.fullName?.[0]}
-              </Avatar>
+              <MailOutline className="text-gray-800" />
+              <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                3
+              </span>
             </IconButton>
-          </div>
-        </Toolbar>
-      </AppBar>
-      {renderMenu}
-    </Box>
+          </Tooltip>
+
+          {/* Notifications */}
+          <NotificationsPanel />
+
+          {/* Profile */}
+          <Tooltip title="Profile" arrow>
+            <IconButton
+              className="hover:bg-gray-100 transition-colors"
+              onClick={() => navigate(`/user/${infoUser._id}`)}
+            >
+              <UserAvatar isMyAvatar={true} size="sm" />
+            </IconButton>
+          </Tooltip>
+        </div>
+      </div>
+    </div>
   );
 }
 
