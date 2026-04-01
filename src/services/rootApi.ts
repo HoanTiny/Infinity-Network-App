@@ -147,6 +147,26 @@ export const rootApi = createApi({
         },
       }),
     }),
+    forgotPassword: builder.mutation({
+      query: ({ email }) => ({
+        url: 'forgot-password',
+        method: 'POST',
+        body: {
+          email,
+        },
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: ({ email, token, password }) => ({
+        url: 'reset-password',
+        method: 'POST',
+        body: {
+          email,
+          token,
+          password,
+        },
+      }),
+    }),
 
     getAuthUser: builder.query<void, void>({
       // <void, void>
@@ -191,4 +211,6 @@ export const {
   useGetAuthUserQuery,
   useRefeshTokenMutation,
   useSearchUsersQuery,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } = rootApi;

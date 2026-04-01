@@ -106,6 +106,8 @@ import AuthLayout from '@page/auth/AuthLayout';
 import RegisterPage from '@page/auth/RegisterPage';
 import LoginPage from '@page/auth/LoginPage';
 import OTPVerifyPage from '@page/auth/OTPVerifyPage';
+import ForgotPasswordPage from '@page/auth/ForgotPasswordPage';
+import ResetPasswordPage from '@page/auth/ResetPasswordPage';
 import { Navigate } from 'react-router-dom';
 import Account from '@page/settings/Account';
 import Messages from '@page/messages';
@@ -193,6 +195,14 @@ const routes = [
           {
             path: 'verify',
             element: <OTPVerifyPage />,
+          },
+          {
+            path: 'forgot-password',
+            element: <ForgotPasswordPage />,
+          },
+          {
+            path: 'reset-password',
+            element: <ResetPasswordPage />,
           },
         ],
       },

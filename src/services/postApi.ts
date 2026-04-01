@@ -180,7 +180,6 @@ export const postApi = rootApi.injectEndpoints({
           // );
 
           return postsAdapter.upsertMany(currentCache, newItems.entities);
-          thê;
           // return updatedState;
         },
 
@@ -301,9 +300,9 @@ export const postApi = rootApi.injectEndpoints({
 
           cachingPairs.forEach(([endpoint, key]) => {
             const patchResult = dispatch(
-              rootApi.util.updateQueryData(endpoint, key, (draft) => {
+              postApi.util.updateQueryData(endpoint, key, (draft) => {
                 console.log({ endpoint, key, draft });
-                const currentPost = draft.entities[args];
+                const currentPost = (draft as any).entities[args];
                 if (currentPost) {
                   currentPost.likes.push({
                     author: {
@@ -324,15 +323,15 @@ export const postApi = rootApi.injectEndpoints({
 
             cachingPairs.forEach(([endpoint, key]) => {
               dispatch(
-                rootApi.util.updateQueryData(endpoint, key, (draft) => {
-                  const currentPost = draft.entities[args];
+                postApi.util.updateQueryData(endpoint, key, (draft) => {
+                  const currentPost = (draft as any).entities[args];
                   if (currentPost) {
-                    currentPost.likes = currentPost.likes.map((like) => {
+                    currentPost.likes = currentPost.likes.map((like: any) => {
                       if (like._id === tempId) {
                         return {
                           author: {
-                            _id: store.auth.userInfo._id,
-                            fullName: store.auth.userInfo.fullName,
+                            _id: (store.auth.userInfo as any)._id,
+                            fullName: (store.auth.userInfo as any).fullName,
                           },
                           createdAt: data.createdAt,
                           updatedAt: data.updatedAt,
@@ -432,19 +431,19 @@ export const postApi = rootApi.injectEndpoints({
           );
 
           const patchResults = [] as any[];
-          const cachingPairs = [
+          const cachingPairs: CachingPair[] = [
             ...userProfilePostsArgs.map((arg: any) => [
               "getPostsByAuthorId",
               { userId: arg.userId },
-            ]),
+            ] as CachingPair),
             ["getPosts", "allPosts"],
           ];
 
           cachingPairs.forEach(([endpoint, key]) => {
             const patchResult = dispatch(
               postApi.util.updateQueryData(endpoint, key, (draft) => {
-                const currentPost = draft.ids
-                  .map((id) => draft.entities[id])
+                const currentPost = (draft as any).ids
+                  .map((id: any) => (draft as any).entities[id])
                   .find((post: any) => post?._id === arg.postId);
 
                 if (currentPost) {
@@ -463,8 +462,8 @@ export const postApi = rootApi.injectEndpoints({
             cachingPairs.forEach(([endpoint, key]) => {
               dispatch(
                 postApi.util.updateQueryData(endpoint, key, (draft) => {
-                  const currentPost = draft.ids
-                    .map((id) => draft.entities[id])
+                  const currentPost = (draft as any).ids
+                    .map((id: any) => (draft as any).entities[id])
                     .find((post: any) => post?._id === arg.postId);
                   if (currentPost) {
                     const index = currentPost.comments.findIndex(

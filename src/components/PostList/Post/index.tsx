@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import CommentSection from '@components/CommentSection';
-import TimeAgo from '@components/TimeAgo';
-import UserAvatar from '@components/UserAvatar';
-import IconButton from '@mui/material/IconButton';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Comment } from 'src/ultil/type';
+import CommentSection from "@components/CommentSection";
+import TimeAgo from "@components/TimeAgo";
+import UserAvatar from "@components/UserAvatar";
+import IconButton from "@mui/material/IconButton";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Comment } from "src/ultil/type";
 
 export type PostProps = {
   fullName: string;
@@ -36,13 +36,13 @@ function Post({
   handleComment,
   resetComment,
   imagePost,
-  auhorId = '',
+  auhorId = "",
 }: PostProps) {
   const [toggleComment, setToggleComment] = useState(false);
 
   const handleToggleComment = () => {
     setToggleComment((prev) => !prev);
-    console.log('toggleComment', toggleComment);
+    console.log("toggleComment", toggleComment);
   };
 
   const displayedComments = toggleComment ? comments : comments.slice(0, 2);
@@ -103,10 +103,21 @@ function Post({
       <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           {isLiked ? (
-            <img src="/icons/intagram/hearted.png" alt="liked" width={20} height={20} />
+            <img
+              src="/icons/intagram/hearted.png"
+              alt="liked"
+              width={20}
+              height={20}
+            />
           ) : (
-            <div className="w-[20px] h-[20px] rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center">
-              <img src="/icons/intagram/heart.png" alt="liked" width={28} height={28} className="object-contain" />
+            <div className="w-[20px] h-[20px] rounded-full  items-center justify-center">
+              <img
+                src="/icons/intagram/heart.png"
+                alt="liked"
+                width={28}
+                height={28}
+                className="object-contain"
+              />
             </div>
           )}
           {likes.length > 0 && (
@@ -121,7 +132,7 @@ function Post({
             className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors"
             onClick={handleToggleComment}
           >
-            {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+            {comments.length} {comments.length === 1 ? "comment" : "comments"}
           </div>
         )}
       </div>
@@ -130,40 +141,70 @@ function Post({
       <div className="flex items-center px-4 py-3 gap-1">
         <button
           className={`p-2 rounded-full transition-all duration-200 hover:bg-gray-100 ${
-            isLiked ? 'text-red-500' : 'text-gray-700'
+            isLiked ? "text-red-500" : "text-gray-700"
           }`}
           onClick={() => handleLike(postId)}
           title="Like"
         >
           {isLiked ? (
-            <img src="/icons/intagram/hearted.png" alt="liked" width={28} height={28} className="object-contain" />
+            <img
+              src="/icons/intagram/hearted.png"
+              alt="liked"
+              width={20}
+              height={20}
+              className="object-contain"
+            />
           ) : (
-            <img src="/icons/intagram/heart.png" alt="like" width={28} height={28} className="object-contain opacity-70 hover:opacity-100" />
+            <img
+              src="/icons/intagram/heart.png"
+              alt="like"
+              width={20}
+              height={20}
+              className="object-contain opacity-70 hover:opacity-100"
+            />
           )}
         </button>
 
         <button
           className={`p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-700 ${
-            toggleComment ? 'bg-gray-100' : ''
+            toggleComment ? "bg-gray-100" : ""
           }`}
           onClick={handleToggleComment}
           title="Comment"
         >
-          <img src="/icons/intagram/cmt-int.png" alt="comment" width={26} height={26} className="object-contain opacity-70 hover:opacity-100" />
+          <img
+            src="/icons/intagram/cmt-int.png"
+            alt="comment"
+            width={20}
+            height={20}
+            className="object-contain opacity-70 hover:opacity-100"
+          />
         </button>
 
         <button
-          className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-700 ml-auto"
+          className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-700"
           title="Share"
         >
-          <img src="/icons/intagram/send.png" alt="share" width={26} height={26} className="object-contain opacity-70 hover:opacity-100" />
+          <img
+            src="/icons/intagram/send.png"
+            alt="share"
+            width={20}
+            height={20}
+            className="object-contain opacity-70 hover:opacity-100"
+          />
         </button>
 
         <button
           className="p-2 rounded-full transition-all duration-200 hover:bg-gray-100 text-gray-700"
           title="Save"
         >
-          <img src="/icons/intagram/bookmark.png" alt="bookmark" width={26} height={26} className="object-contain opacity-70 hover:opacity-100" />
+          <img
+            src="/icons/intagram/bookmark.png"
+            alt="bookmark"
+            width={20}
+            height={20}
+            className="object-contain opacity-70 hover:opacity-100"
+          />
         </button>
       </div>
 
