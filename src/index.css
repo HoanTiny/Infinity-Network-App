@@ -5,16 +5,26 @@
 @tailwind utilities;
 
 :root {
-  /* Instagram-inspired color palette */
-  --ig-primary-bg: #fafafa;
-  --ig-secondary-bg: #ffffff;
+  /* IG theme tokens — light defaults */
+  --ig-bg: #ffffff;
+  --ig-surface: #ffffff;
+  --ig-border: #dbdbdb;
+  --ig-text: #262626;
+  --ig-muted: #8e8e8e;
+  --ig-hover: #fafafa;
+  --ig-heart: #ed4956;
+  --ig-accent: #0095f6;
+
+  /* Legacy aliases — kept for older components still referencing them */
+  --ig-primary-bg: var(--ig-bg);
+  --ig-secondary-bg: var(--ig-surface);
   --ig-tertiary-bg: #f0f0f0;
-  --ig-text-primary: #262626;
-  --ig-text-secondary: #8e8e8e;
-  --ig-border-color: #dbdbdb;
-  --ig-blue: #0095f6;
+  --ig-text-primary: var(--ig-text);
+  --ig-text-secondary: var(--ig-muted);
+  --ig-border-color: var(--ig-border);
+  --ig-blue: var(--ig-accent);
   --ig-blue-hover: #1877f2;
-  --ig-red: #ed4956;
+  --ig-red: var(--ig-heart);
   --ig-green: #00c853;
   --ig-gradient-primary: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   --ig-gradient-story: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888, #8a3ab9);
@@ -26,10 +36,26 @@
   --shadow-story: 0 0 8px rgba(220, 39, 67, 0.4);
 }
 
+html.dark {
+  --ig-bg: #000000;
+  --ig-surface: #000000;
+  --ig-border: #262626;
+  --ig-text: #f5f5f5;
+  --ig-muted: #a8a8a8;
+  --ig-hover: #1a1a1a;
+  --ig-heart: #ff3040;
+  --ig-accent: #0095f6;
+  --ig-tertiary-bg: #1a1a1a;
+}
+
+html,
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-  background-color: var(--ig-primary-bg);
-  color: var(--ig-text-primary);
+  background-color: var(--ig-bg);
+  color: var(--ig-text);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/**/*.{html,ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -18,6 +19,16 @@ export default {
           800: '#B8B6BC',
           900: '#A7A5AB',
         },
+        // IG theme tokens — values flip when <html> has .dark class.
+        // See definitions in src/index.css.
+        'ig-bg': 'var(--ig-bg)',
+        'ig-surface': 'var(--ig-surface)',
+        'ig-border': 'var(--ig-border)',
+        'ig-text': 'var(--ig-text)',
+        'ig-muted': 'var(--ig-muted)',
+        'ig-hover': 'var(--ig-hover)',
+        'ig-heart': 'var(--ig-heart)',
+        'ig-accent': 'var(--ig-accent)',
       },
       boxShadow: {
         '3xl': '0px 4px 18px 0px rgba(75, 70, 92, 0.10)',
@@ -29,5 +40,4 @@ export default {
     },
   },
   plugins: [],
-  darkMode: 'class',
 };

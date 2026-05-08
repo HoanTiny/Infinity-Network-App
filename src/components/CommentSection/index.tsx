@@ -1,9 +1,7 @@
 import TimeAgo from '@components/TimeAgo';
 import UserAvatar from '@components/UserAvatar';
-import Send from '@mui/icons-material/Send';
-import { TextField } from '@mui/material';
-// import { useCreateNotificationMutation } from '@services/notificationApi';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Comment } from 'src/ultil/type';
 
 type CommentSectionProps = {
@@ -14,6 +12,8 @@ type CommentSectionProps = {
   resetComment?: boolean;
 };
 
+const PAGE_SIZE = 5;
+
 const CommentSection = ({
   comments,
   allComments,
@@ -21,119 +21,128 @@ const CommentSection = ({
   handleComment,
   resetComment,
 }: CommentSectionProps) => {
-  //   const [commentPost, { isSuccess, error }] = useCommentPostMutation();
+  const source = allComments && allComments.length ? allComments : comments;
   const [newComment, setNewComment] = useState('');
-  const [visibleCount, setVisibleCount] = useState(5);
-  //   const [createNotification] = useCreateNotificationMutation();
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleKeyDown = async (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && newComment.trim() !== '') {
+  const sorted = [...source].sort(
+    (a, b) =>
+      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
+  const visible = sorted.slice(0, visibleCount);
+  const remaining = sorted.length - visibleCount;
+
+  const trimmed = newComment.trim();
+  const canPost = trimmed.length > 0;
+
+  const submit = () => {
+    if (!canPost) return;
+    handleComment(postId, trimmed);
+    setNewComment('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleComment(postId, newComment);
+      submit();
     }
   };
 
-  const handleShowMore = () => {
-    setVisibleCount((prev) => prev + 5);
+  const autoResize = (el: HTMLTextAreaElement) => {
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 80)}px`;
   };
-
-  const visibleComments = [...(allComments || comments)]
-    .sort(
-      (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    )
-    .slice(0, visibleCount);
 
   useEffect(() => {
-    if (resetComment) {
-      setNewComment('');
-    }
+    if (resetComment) setNewComment('');
   }, [resetComment]);
 
+  useEffect(() => {
+    if (textareaRef.current) autoResize(textareaRef.current);
+  }, [newComment]);
+
   return (
-    <div className="flex flex-col gap-3 p-5">
-      <div className="max-h-[400px] overflow-y-auto pr-2 flex flex-col gap-3">
-        {visibleComments.map((comment) => (
-          <div key={comment._id} className="flex gap-3 items-start">
-            <div className="flex-shrink-0">
-              <UserAvatar src={comment.author.image} size="sm" />
-            </div>
-            <div className="flex-1">
-              <div className="bg-gray-100 px-4 py-2.5 rounded-2xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-[15px] text-gray-900">
-                    {comment.author.fullName}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    <TimeAgo date={comment.updatedAt} />
-                  </span>
-                </div>
-                <p className="text-[15px] text-gray-800 leading-relaxed">
-                  {comment.comment}
-                </p>
+    <div className="bg-ig-bg">
+      <ul className="px-4 pt-3 pb-2 space-y-3">
+        {remaining > 0 && (
+          <li>
+            <button
+              type="button"
+              onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+              className="text-[14px] text-ig-muted hover:text-ig-text transition-colors"
+            >
+              View previous comments ({remaining})
+            </button>
+          </li>
+        )}
+
+        {visible.map((c) => (
+          <li key={c._id} className="flex gap-3">
+            <Link to={`/user/${c.author._id}`} className="shrink-0 pt-0.5">
+              <UserAvatar src={c.author.image} size="sm" />
+            </Link>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] text-ig-text leading-snug">
+                <Link
+                  to={`/user/${c.author._id}`}
+                  className="font-semibold mr-1.5 hover:opacity-70"
+                >
+                  {c.author.fullName}
+                </Link>
+                <span className="whitespace-pre-wrap break-words">
+                  {c.comment}
+                </span>
+              </p>
+
+              <div className="flex items-center gap-4 mt-1 text-[12px] text-ig-muted">
+                <TimeAgo date={c.updatedAt} />
+                <button
+                  type="button"
+                  className="font-semibold hover:text-ig-text transition-colors"
+                >
+                  Reply
+                </button>
               </div>
             </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
 
-      {comments.length > visibleCount && (
-        <button
-          className="text-blue-600 text-sm font-medium self-start hover:text-blue-700 transition-colors"
-          onClick={handleShowMore}
-        >
-          View more comments ({comments.length - visibleCount} more)
-        </button>
-      )}
-
-      <div className="flex gap-3 items-center mt-2 pt-3 border-t border-gray-100">
-        <div className="flex-shrink-0">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+        className="flex items-start gap-3 px-4 py-3 border-t border-ig-border"
+      >
+        <div className="shrink-0 pt-0.5">
           <UserAvatar isMyAvatar size="sm" />
         </div>
-        <TextField
-          fullWidth
-          multiline
-          minRows={1}
-          maxRows={4}
+
+        <textarea
+          ref={textareaRef}
+          rows={1}
           placeholder="Add a comment..."
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           onKeyDown={handleKeyDown}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              backgroundColor: '#fff',
-              borderRadius: '20px',
-              padding: '4px 12px',
-              fontSize: '15px',
-              '& fieldset': {
-                border: '1px solid #e0e0e0',
-              },
-              '&:hover fieldset': {
-                border: '1px solid #bdbdbd',
-              },
-              '&.Mui-focused fieldset': {
-                border: '1px solid #424242',
-              },
-            },
-          }}
+          className="flex-1 resize-none bg-transparent text-[14px] text-ig-text placeholder:text-ig-muted outline-none border-0 leading-snug py-1.5 max-h-20"
         />
+
         <button
-          onClick={async () => {
-            if (newComment.trim() !== '') {
-              handleComment(postId, newComment);
-              setNewComment('');
-            }
-          }}
-          className={`${
-            newComment.trim() !== ''
-              ? 'text-blue-600 hover:text-blue-700 cursor-pointer'
-              : 'text-gray-400 cursor-not-allowed'
-          } p-2 transition-colors flex-shrink-0`}
-          disabled={newComment.trim() === ''}
+          type="submit"
+          disabled={!canPost}
+          className={`text-[14px] font-semibold transition-opacity py-1.5 ${
+            canPost
+              ? 'text-ig-accent hover:opacity-70'
+              : 'text-ig-accent/40 cursor-not-allowed'
+          }`}
         >
-          <Send style={{ fontSize: 22 }} />
+          Post
         </button>
-      </div>
+      </form>
     </div>
   );
 };
