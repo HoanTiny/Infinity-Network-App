@@ -1,39 +1,40 @@
 import { Outlet } from 'react-router-dom';
 import { Suspense } from 'react';
-// Supports weights 100-900
-import '@fontsource-variable/public-sans';
+import { motion } from 'framer-motion';
 
 function RootLayout() {
   return (
-    <div>
-      <Suspense>
-        <div className="w-full flex items-center justify-center h-screen bg-[#F8F7FA] p-6">
-          <div className="absolute lg:top-[3%] lg:left-[33%] top-0 left-6">
-            <img src="/img/top-shape.svg" alt="" />
-          </div>
-          <div className="absolute lg:bottom-[3%] lg:right-[33%] bottom-0 right-6">
-            <img src="/img/bottom-shape.svg" alt="" />
-          </div>
-          <div className="p-8 bg-white rounded-xl flex flex-col gap-6 w-[450px] items-center shadow-3xl z-10">
-            <div>
-              <img src="/img/Logo2.svg" alt="Logo" />
-            </div>
-            <Outlet />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Instagram-style gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-pink-500 via-orange-400 to-cyan-500" />
 
-            <div>or</div>
-            <div className="flex gap-4">
-              <div className="cursor-pointer">
-                <img src="/img/Facebook.png" alt="Facebook" />
-              </div>
-              <div className="cursor-pointer">
-                <img src="/img/Google.svg" alt="Google" />
-              </div>
-              <div className="cursor-pointer">
-                <img src="/img/Twitter.svg" alt="Twitter" />
-              </div>
+      {/* Ambient blobs */}
+      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-purple-500/35 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-orange-400/35 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-pink-400/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/3 left-1/4 w-56 h-56 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />
+
+      <Suspense>
+        <motion.div
+          initial={{ opacity: 0, y: 32, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="relative z-10 w-full max-w-[420px] mx-auto px-4 py-8"
+        >
+          {/* Fully opaque white card — no gradient bleed-through */}
+          <div className="rounded-3xl p-8 md:p-10 flex flex-col gap-6 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 shadow-[0_20px_60px_rgba(0,0,0,0.15)]">
+            {/* Logo */}
+            <div className="flex justify-center pt-1">
+              <img
+                src="/img/Logo2.svg"
+                alt="Logo"
+                className="h-9 w-auto object-contain"
+              />
             </div>
+
+            <Outlet />
           </div>
-        </div>
+        </motion.div>
       </Suspense>
     </div>
   );

@@ -2,13 +2,13 @@
 import { useForm } from 'react-hook-form';
 import FormField from '../../components/FormField';
 import TextInput from '../../components/FormInput/TextInput';
-import { Alert, Button } from '@mui/material';
 import { useRegisterMutation } from '@services/rootApi';
 import { useDispatch } from 'react-redux';
 import { useEffect } from 'react';
 import { openSnackbar } from '@redux/slice/snackbar';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { motion } from 'framer-motion';
 
 function RegisterPage() {
   const formSchema = yup.object().shape({
@@ -34,7 +34,6 @@ function RegisterPage() {
   const dispatch = useDispatch();
 
   function onSubmit(formData: any) {
-    // console.log(`data`, { formData });
     register(formData);
   }
 
@@ -57,15 +56,31 @@ function RegisterPage() {
   console.log(`data, isLoading`, data, isLoading, errors);
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <div>
-        <h2 className="text-[22px]">Adventure starts here 🚀</h2>
-        <p className="text-[15px]">Make your favorite social network account</p>
+    <motion.div
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -10 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="flex flex-col gap-5 w-full"
+    >
+      {/* Heading */}
+      <div className="flex flex-col gap-1">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+          Bắt đầu hành trình{' '}
+          <span className="inline-block bg-gradient-to-r from-violet-500 via-pink-500 to-orange-400 bg-clip-text text-transparent">
+            🚀
+          </span>
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Tạo tài khoản mạng xã hội của bạn ngay hôm nay
+        </p>
       </div>
+
+      {/* Form */}
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <FormField
           name="fullName"
-          label="UserName"
+          label="Tên đăng nhập"
           control={control}
           type="text"
           className="w-full"
@@ -85,29 +100,52 @@ function RegisterPage() {
         />
         <FormField
           name="password"
-          label="Password"
+          label="Mật khẩu"
           control={control}
           type="password"
-          className="w-full  "
-          placeholder="********"
+          className="w-full"
+          placeholder="Tối thiểu 6 ký tự"
           Component={TextInput}
           error={errors.password}
         />
 
-        <Button type="submit" variant="contained" color="primary">
-          Sign Up
-        </Button>
+        {/* Submit button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={[
+            'w-full h-12 rounded-2xl text-white font-semibold text-sm mt-1',
+            'bg-gradient-to-r from-violet-500 via-pink-500 to-orange-400',
+            'shadow-lg shadow-pink-500/25',
+            'hover:shadow-pink-500/40 hover:-translate-y-0.5',
+            'active:translate-y-0 active:shadow-md',
+            'transition-all duration-300',
+            'disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg',
+            'flex items-center justify-center gap-2',
+          ].join(' ')}
+        >
+          {isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Đang tạo tài khoản...</span>
+            </>
+          ) : (
+            'Tạo tài khoản'
+          )}
+        </button>
       </form>
-      {isError && error && 'data' in error && (
-        <Alert severity="error">{(error as any).data?.message}</Alert>
-      )}
-      <div className="flex">
-        <p className="mr-1">Already have an account?</p>
-        <a href="/login" className="text-[#246AA3]">
-          Sign in instead
+
+      {/* Login link */}
+      <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+        Đã có tài khoản?{' '}
+        <a
+          href="/login"
+          className="font-semibold text-pink-500 hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
+        >
+          Đăng nhập
         </a>
-      </div>
-    </div>
+      </p>
+    </motion.div>
   );
 }
 

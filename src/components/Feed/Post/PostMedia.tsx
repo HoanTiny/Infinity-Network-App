@@ -5,12 +5,12 @@ type Props = {
 
 function PostMedia({ src, alt = 'Post media' }: Props) {
   return (
-    <div className="w-full bg-black">
+    <div className="w-full bg-black rounded-xl">
       <img
         src={src}
         alt={alt}
         loading="lazy"
-        className="block w-full h-auto aspect-square object-cover sm:aspect-auto sm:max-h-[585px]"
+        className="block w-full h-auto object-cover max-h-[600px] rounded-xl"
       />
     </div>
   );

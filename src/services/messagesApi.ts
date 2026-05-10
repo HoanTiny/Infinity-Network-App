@@ -14,35 +14,46 @@ export const messagesApi = rootApi.injectEndpoints({
 
     // Endpoint lấy danh sách tin nhắn của một user cụ thể.
     getMessages: builder.query({
-      query: ({ userId, offset, limit }) => ({
+      query: ({ userId, offset = 0, limit = 30 }) => ({
         url: '/messages',
-        params: {
-          userId,
-          offset,
-          limit,
-        },
+        params: { userId, offset, limit },
       }),
 
-      // serializeQueryArgs xác định cache key cho truy vấn dựa trên userId.
-      // Điều này giúp các truy vấn với cùng userId dùng chung cache,
-      // bất kể các tham số khác như page, limit, v.v.
-      serializeQueryArgs: ({ queryArgs }) => ({
-        userId: queryArgs.userId,
-      }),
+      // Tất cả query cùng userId dùng chung 1 cache entry
+      serializeQueryArgs: ({ queryArgs }) => ({ userId: queryArgs.userId }),
 
-      // providesTags trả về tag dạng { type: 'MESSAGES', id: userId }
-      // để quản lý cache riêng cho từng user.
-      providesTags: (result, error, { userId }) => {
-        return [{ type: 'MESSAGES', id: userId }];
+      // Gộp kết quả phân trang vào cache hiện có
+      merge: (currentCache: any, newItems: any, { arg }: any) => {
+        const existingMessages =
+          !currentCache || !arg.offset ? [] : currentCache.messages || [];
+        const existingIds = new Set(existingMessages.map((m: any) => m._id));
+        const uniqueNew = newItems.messages.filter(
+          (m: any) => !existingIds.has(m._id)
+        );
+        const merged = [...existingMessages, ...uniqueNew].sort(
+          (a: any, b: any) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        return { messages: merged, pagination: newItems.pagination };
       },
+
+      // Buộc fetch lại khi offset hoặc userId thay đổi
+      forceRefetch: ({ currentArg, previousArg }) =>
+        currentArg?.userId !== previousArg?.userId ||
+        currentArg?.offset !== previousArg?.offset,
+
+      providesTags: (result, error, { userId }) => [
+        { type: 'MESSAGES', id: userId },
+      ],
     }),
     sendMeassage: builder.mutation({
-      query: ({ message, receiver }) => ({
+      query: ({ message, receiver, replyToId }) => ({
         url: '/messages/create',
         method: 'POST',
         body: {
           message,
           receiver,
+          ...(replyToId && { replyToId }),
         },
       }),
       // invalidatesTags: (result, error, { receiver }) => [
@@ -176,10 +187,7 @@ export const messagesApi = rootApi.injectEndpoints({
           sender,
         },
       }),
-      invalidatesTags: (result, error, { sender }) => [
-        'CONVERSATIONS',
-        { type: 'MESSAGES', id: sender },
-      ],
+      invalidatesTags: ['CONVERSATIONS'],
     }),
   }),
 });

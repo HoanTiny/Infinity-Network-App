@@ -1,339 +1,503 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import UserAvatar from '@components/UserAvatar';
 import { useUserInfo } from '@hooks/getUserinfo';
-import { IconButton } from '@mui/material';
+import {
+  ChevronLeft,
+  ChevronDown,
+  Info,
+  Phone,
+  Video,
+  Smile,
+  CornerUpLeft,
+  MoreHorizontal,
+} from 'lucide-react';
 import { useGetMessagesQuery } from '@services/messagesApi';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import MessageCreation from '../MessageCreation';
 import { useGetUserProfileQuery } from '@services/userApi';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { throttle } from 'lodash';
 import { socket } from '@context/SocketProvider';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
+
+const LIMIT = 15;
+const PREPEND_OFFSET = 100_000;
+const QUICK_EMOJIS = ['❤️', '😂', '😮', '😢', '🙏', '👍'];
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+const MessageSkeleton = ({ right = false }: { right?: boolean }) => (
+  <div
+    className={`flex items-end gap-2 px-4 py-1 animate-pulse ${
+      right ? 'justify-end' : 'justify-start'
+    }`}
+  >
+    {!right && <div className="w-8 h-8 rounded-full bg-ig-hover shrink-0" />}
+    <div
+      className={`rounded-2xl bg-ig-hover ${right ? 'w-44 h-10' : 'w-36 h-10'}`}
+    />
+  </div>
+);
+
+const DateSeparator = ({ date }: { date: string }) => {
+  const d = dayjs(date);
+  const diff = dayjs().diff(d, 'day');
+  const label =
+    diff === 0 ? 'Hôm nay' : diff === 1 ? 'Hôm qua' : d.format('DD/MM/YYYY');
+  return (
+    <div className="flex items-center justify-center gap-3 px-6 py-4 select-none">
+      <span className="text-[11px] font-medium text-ig-muted tracking-wide px-1">
+        {label}
+      </span>
+    </div>
+  );
+};
+
+const EmojiPicker = ({
+  onSelect,
+  isSent,
+}: {
+  onSelect: (e: string) => void;
+  isSent: boolean;
+}) => (
+  <div
+    onClick={(e) => e.stopPropagation()}
+    className={`absolute bottom-full mb-2 z-30 bg-ig-bg border border-ig-border rounded-full shadow-xl px-2.5 py-1.5 flex items-center gap-0.5 ${
+      isSent ? 'right-0' : 'left-0'
+    }`}
+  >
+    {QUICK_EMOJIS.map((emoji) => (
+      <button
+        key={emoji}
+        onClick={() => onSelect(emoji)}
+        className="text-[20px] hover:scale-125 transition-transform duration-150 leading-none px-0.5"
+      >
+        {emoji}
+      </button>
+    ))}
+  </div>
+);
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const getBubbleRadius = (
+  isSent: boolean,
+  _isFirst: boolean,
+  isLast: boolean,
+): React.CSSProperties => {
+  const R = 20;
+  const S = 5;
+  if (isSent) {
+    return {
+      borderTopLeftRadius: R,
+      borderTopRightRadius: isLast ? R : S,
+      borderBottomRightRadius: S,
+      borderBottomLeftRadius: R,
+    };
+  }
+  return {
+    borderTopLeftRadius: isLast ? R : S,
+    borderTopRightRadius: R,
+    borderBottomRightRadius: R,
+    borderBottomLeftRadius: S,
+  };
+};
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 
 const ChatDetail = () => {
-  const [activeHover, setActiveHover] = useState<string | null>(null);
   const { userId } = useParams<{ userId: string }>();
   const { data: userData } = useGetUserProfileQuery(userId);
-  const textEndRef = useRef<HTMLDivElement>(null);
   const infoUser = useUserInfo();
   const currentUserId = infoUser?._id;
-  const [offset, setOffset] = useState(0);
-  const limit = 20;
-  const [allMessages, setAllMessages] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [newMessagesNotification, setNewMessagesNotification] = useState(false);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [refetchData, setRefetchData] = useState<any>(null);
+  const navigate = useNavigate();
+
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
+  // Ref-based lock: prevents followOutput from firing during old-message prepend
+  const loadingOlderRef = useRef(false);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newMessageCount, setNewMessageCount] = useState(0);
+  const [prevUserId, setPrevUserId] = useState(userId);
+  const [replyingTo, setReplyingTo] = useState<any>(null);
+  const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
+  const [reactions, setReactions] = useState<Record<string, string[]>>({});
+
+  // Reset offset synchronously during render to prevent stale-offset query on userId change
+  if (prevUserId !== userId) {
+    setPrevUserId(userId);
+    setCurrentOffset(0);
+  }
 
   const {
     data = { messages: [], pagination: {} },
     isFetching,
-    refetch,
-  } = useGetMessagesQuery({
-    userId,
-    offset,
-    limit,
-  });
-
-  // Reset state khi userId đổi
-  useEffect(() => {
-    setAllMessages([]);
-    setOffset(0);
-    setHasMore(true);
-    setRefetchData(true);
-  }, [userId, setRefetchData]);
-
-  // Khi data mới về, cập nhật refetchData để tránh lỗi stale-while-revalidate
-  useEffect(() => {
-    if (refetchData) {
-      refetch();
-      setOffset(0);
-
-      setRefetchData(null);
-    }
-  }, [refetchData, refetch]);
-
-  // Khi data mới về và offset = 0 (lần đầu load hoặc đổi userId), cập nhật allMessages
-  useEffect(() => {
-    if (
-      offset === 0 &&
-      data?.messages &&
-      (allMessages.length !== data.messages.length ||
-        allMessages[0]?._id !== data.messages[0]?._id)
-    ) {
-      setAllMessages(data.messages);
-      setHasMore((data.pagination?.total || 0) > data.messages.length);
-    }
-    // eslint-disable-next-line
-  }, [offset, data.messages]);
-
-  // Khi offset > 0 (load more), merge thêm messages vào đầu danh sách
-  useEffect(() => {
-    if (offset > 0 && data?.messages?.length) {
-      setAllMessages((prev) => {
-        const ids = new Set(prev.map((m) => m._id));
-        const newMsgs = data.messages.filter((m: any) => !ids.has(m._id));
-        const merged = [...newMsgs, ...prev];
-        return merged.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      });
-      // Kiểm tra còn load nữa không
-      if ((data.pagination?.total || 0) <= offset + data.messages.length) {
-        setHasMore(false);
-      }
-    }
-    // eslint-disable-next-line
-  }, [data, offset]);
-
-  // Khi offset > 0, chỉ gọi refetch nếu hasMore vẫn còn true
-  useEffect(() => {
-    if (offset > 0 && hasMore) {
-      refetch();
-    }
-  }, [offset, hasMore, refetch]);
-
-  // Scroll xuống cuối khi đổi userId hoặc gửi tin nhắn mới
-  useEffect(() => {
-    if (textEndRef.current && offset === 0) {
-      textEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
-    }
-  }, [allMessages, offset, userId]);
-
-  const loadMore = useCallback(() => {
-    setOffset((prev) => prev + limit);
-  }, []);
-
-  // Throttled scroll handler for loading more messages
-  const handleScroll = useMemo(
-    () =>
-      throttle(() => {
-        const container = messagesContainerRef.current;
-        if (!container || isFetching || !hasMore) return;
-        if (container.scrollTop < 200) {
-          loadMore();
-          setTimeout(() => {
-            if (container) container.scrollTop += 400;
-          }, 100);
-        }
-      }, 300),
-    [isFetching, hasMore, loadMore]
+    isLoading,
+  } = useGetMessagesQuery(
+    { userId, offset: currentOffset, limit: LIMIT },
+    { skip: !userId },
   );
 
-  // Group messages by day or 5-minute interval
-  const groupedMessages = useMemo(() => {
-    return allMessages.reduce((acc: any, message: any) => {
-      const createdAt = dayjs(message.createdAt);
-      const roundedMinutes = Math.floor(createdAt.minute() / 5) * 5;
-      const formattedDateHour = createdAt
-        .minute(roundedMinutes)
-        .second(0)
-        .format('HH:mm');
-      const formattedDateDay = createdAt.format('YYYY-MM-DD');
-      const diff = createdAt.diff(dayjs(), 'day');
-      const date = diff === 0 ? formattedDateHour : formattedDateDay;
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(message);
-      return acc;
-    }, {});
-  }, [allMessages]);
+  const messages: any[] = data.messages || [];
+  const total: number = data.pagination?.total ?? 0;
+  const hasMore = total > messages.length;
+  const firstItemIndex = PREPEND_OFFSET - messages.length;
 
-  // Flatten groupedMessages thành 1 mảng để virtualize
-  const flatMessages = useMemo(() => {
-    const arr: any[] = [];
-    Object.entries(groupedMessages).forEach(([date, messages]: any) => {
-      arr.push({ type: 'date', date });
-      messages.forEach((msg: any) => arr.push({ type: 'msg', ...msg }));
-    });
-    return arr;
-  }, [groupedMessages]);
-
-  // TanStack Virtualizer
-  const rowVirtualizer = useVirtualizer({
-    count: flatMessages.length,
-    getScrollElement: () => messagesContainerRef.current,
-    estimateSize: () => 72,
-    overscan: 10,
-  });
-
-  // Tự động scroll tới cuối khi mở chat hoặc đổi userId
+  // Reset UI state when switching conversation
   useEffect(() => {
-    if (offset === 0 && flatMessages.length > 0) {
-      rowVirtualizer.scrollToIndex(flatMessages.length - 1, { align: 'end' });
-    }
-  }, [flatMessages.length, offset, userId]);
+    setIsAtBottom(true);
+    setNewMessageCount(0);
+    setReplyingTo(null);
+    setEmojiPickerFor(null);
+    setIsLoadingOlder(false);
+    loadingOlderRef.current = false;
+    clearTimeout(loadingTimerRef.current);
+  }, [userId]);
 
-  // Attach/detach scroll event
+  // Close emoji picker on outside click
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-    }
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll);
+    if (!emojiPickerFor) return;
+    const close = () => setEmojiPickerFor(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [emojiPickerFor]);
+
+  // Show unread badge when incoming message arrives while scrolled up
+  useEffect(() => {
+    const handleIncoming = (msg: any) => {
+      const inThisConversation =
+        msg?.sender?._id === userId || msg?.receiver?._id === userId;
+      const fromOther = msg?.sender?._id !== currentUserId;
+      if (inThisConversation && fromOther && !isAtBottom) {
+        setNewMessageCount((n) => n + 1);
       }
-      handleScroll.cancel();
     };
-  }, [handleScroll]);
-
-  // Listen for new messages via socket
-  useEffect(() => {
-    const handleSocketMessage = () => {
-      setNewMessagesNotification(true);
-    };
-
-    socket.on('SEND_MESSAGE', handleSocketMessage);
+    socket.on('SEND_MESSAGE', handleIncoming);
     return () => {
-      socket.off('SEND_MESSAGE', handleSocketMessage);
+      socket.off('SEND_MESSAGE', handleIncoming);
     };
+  }, [userId, currentUserId, isAtBottom]);
+
+  // Release lock once the API fetch finishes
+  useEffect(() => {
+    if (!isFetching) {
+      loadingOlderRef.current = false;
+      setIsLoadingOlder(false);
+    }
+  }, [isFetching]);
+
+  const handleStartReached = useCallback(() => {
+    if (!hasMore || loadingOlderRef.current) return;
+    loadingOlderRef.current = true;
+    setIsLoadingOlder(true); // show spinner immediately
+    // 1s simulated delay before the actual fetch — friendlier on slow connections
+    loadingTimerRef.current = setTimeout(() => {
+      setCurrentOffset((prev) => prev + LIMIT);
+    }, 1000);
+  }, [hasMore]);
+
+  const scrollToBottom = useCallback(() => {
+    virtuosoRef.current?.scrollToIndex({ index: 'LAST', behavior: 'smooth' });
+    setNewMessageCount(0);
   }, []);
 
-  // Handle sending new message
-  // const handleSendMessageSuccess = (newMessage: any) => {
-  //   // setAllMessages((prev) => {
-  //   //   if (prev.some((m) => m._id === newMessage._id)) return prev;
-  //   //   const merged = [...prev, newMessage];
-  //   //   return merged.sort(
-  //   //     (a, b) =>
-  //   //       new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  //   //   );
-  //   // });
+  const handleSendSuccess = useCallback(() => {
+    // Use 'auto' (instant) so it doesn't race with followOutput's smooth animation
+    virtuosoRef.current?.scrollToIndex({ index: 'LAST', behavior: 'auto' });
+    setIsAtBottom(true);
+    setNewMessageCount(0);
+    setReplyingTo(null);
+  }, []);
 
-  //   console.log('Có tin nhắn mới:', newMessage);
-  //   setTimeout(() => {
-  //     if (textEndRef.current) {
-  //       console.log('vô scroll vào cuối');
-  //       textEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
-  //     }
-  //   }, 100);
-  // };
+  const handleReact = useCallback((msgId: string, emoji: string) => {
+    setReactions((prev) => {
+      const current = prev[msgId] || [];
+      const has = current.includes(emoji);
+      return {
+        ...prev,
+        [msgId]: has ? current.filter((e) => e !== emoji) : [...current, emoji],
+      };
+    });
+    setEmojiPickerFor(null);
+  }, []);
+
+  if (!userId) return null;
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-64px)]">
-      <div className="flex items-center justify-between p-4 mb-4 border-b-2 border-gray-200">
-        <div className="flex items-center gap-3">
-          <UserAvatar src={userData?.image} />
-          <h3>{userData?.fullName}</h3>
+    <div className="h-screen flex flex-col bg-ig-bg">
+      {/* ── Header ─────────────────────────────────────── */}
+      <div className="px-4 py-3 border-b border-ig-border bg-ig-bg shadow-sm flex items-center gap-3 shrink-0">
+        <button
+          onClick={() => navigate('/messages')}
+          className="sm:hidden p-2 rounded-full hover:bg-ig-hover transition-colors"
+        >
+          <ChevronLeft size={20} className="text-ig-text" />
+        </button>
+
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="relative shrink-0">
+            <UserAvatar src={userData?.image} size="md" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-ig-bg shadow-sm" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-ig-text text-[15px] font-bold leading-tight truncate">
+              {userData?.fullName}
+            </span>
+            <span className="text-green-500 text-[12px] leading-tight font-medium">
+              Đang hoạt động
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <IconButton>
-            <img src="/icons/phone-call.svg" alt="Phone" className="w-6 h-6" />
-          </IconButton>
-          <IconButton>
-            <img src="/icons/video.svg" alt="Video" className="w-6 h-6" />
-          </IconButton>
+
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button className="p-2.5 rounded-full hover:bg-ig-hover transition-colors text-[#3897F0]">
+            <Phone size={19} />
+          </button>
+          <button className="p-2.5 rounded-full hover:bg-ig-hover transition-colors text-[#3897F0]">
+            <Video size={19} />
+          </button>
+          <button className="p-2.5 rounded-full hover:bg-ig-hover transition-colors text-ig-muted hover:text-ig-text">
+            <Info size={19} />
+          </button>
         </div>
       </div>
-      <div className="rounded-lg p-4 overflow-y-auto flex flex-col flex-1">
-        <div
-          className="flex-1 overflow-y-auto relative"
-          ref={messagesContainerRef}
-          style={{ height: '100%' }}
-        >
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-              position: 'relative',
-              width: '100%',
+
+      {/* ── Messages area ──────────────────────────────── */}
+      <div className="flex-1 relative min-h-0">
+        {isLoading && messages.length === 0 ? (
+          <div className="h-full flex flex-col justify-end gap-1 pb-4 px-2">
+            {[false, true, false, false, true, true, false, true].map(
+              (right, i) => (
+                <MessageSkeleton key={i} right={right} />
+              ),
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Spinner floats outside Virtuoso so it never changes the scroll area height */}
+            {(isLoadingOlder || isFetching) && (
+              <div className="absolute top-3 left-0 right-0 flex justify-center z-20 pointer-events-none">
+                <div className="flex items-center gap-2 bg-ig-bg/90 backdrop-blur-sm border border-ig-border px-3 py-1.5 rounded-full shadow-sm">
+                  <div className="w-3.5 h-3.5 border-2 border-[#3897F0] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[12px] text-ig-muted">Đang tải...</span>
+                </div>
+              </div>
+            )}
+
+          <Virtuoso
+            key={userId}
+            ref={virtuosoRef}
+            style={{ height: '100%' }}
+            firstItemIndex={firstItemIndex}
+            initialTopMostItemIndex={
+              messages.length > 0 ? messages.length - 1 : 0
+            }
+            alignToBottom
+            increaseViewportBy={{ top: 400, bottom: 200 }}
+            defaultItemHeight={56}
+            data={messages}
+            computeItemKey={(_, msg: any) => msg._id}
+            startReached={handleStartReached}
+            followOutput={(atBottom) => {
+              if (loadingOlderRef.current) return false;
+              return atBottom ? 'smooth' : false;
             }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const item = flatMessages[virtualRow.index];
-              if (item.type === 'date') {
-                return (
-                  <div
-                    key={virtualRow.index}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      transform: `translateY(${virtualRow.start}px)`,
-                      zIndex: 1,
-                    }}
-                    className="text-gray-500 text-sm mb-2 text-center p-4"
-                  >
-                    {item.date}
-                  </div>
-                );
-              }
-              // Render message như cũ
+            atBottomStateChange={(atBottom) => {
+              setIsAtBottom(atBottom);
+              if (atBottom) setNewMessageCount(0);
+            }}
+            atBottomThreshold={100}
+            overscan={400}
+            itemContent={(index, message: any) => {
+              const i = index - firstItemIndex;
+              const prevMsg = messages[i - 1];
+              const nextMsg = messages[i + 1];
+              const isSent = message.sender._id === currentUserId;
+
+              const showDate =
+                !prevMsg ||
+                dayjs(message.createdAt).format('YYYY-MM-DD') !==
+                  dayjs(prevMsg.createdAt).format('YYYY-MM-DD');
+
+              const sameAsPrev =
+                !!prevMsg &&
+                prevMsg.sender._id === message.sender._id &&
+                dayjs(message.createdAt).diff(
+                  dayjs(prevMsg.createdAt),
+                  'minute',
+                ) < 5;
+
+              const sameAsNext =
+                !!nextMsg &&
+                nextMsg.sender._id === message.sender._id &&
+                dayjs(nextMsg.createdAt).diff(
+                  dayjs(message.createdAt),
+                  'minute',
+                ) < 5;
+
+              const isFirst = !sameAsPrev;
+              const isLast = !sameAsNext;
+              const showAvatar = !isSent && isLast;
+              const msgReactions = reactions[message._id] || [];
+
               return (
-                <div
-                  key={virtualRow.index}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                  className={`flex items-start mb-2 gap-2  ${
-                    item.sender._id === currentUserId ? 'justify-end' : ''
-                  }`}
-                >
-                  {item.sender._id !== currentUserId && (
-                    <UserAvatar src={item.sender.image} />
-                  )}
+                <div style={{ paddingTop: isFirst ? 10 : 2 }}>
+                  {showDate && <DateSeparator date={message.createdAt} />}
+
+                  {/* Message row with group hover */}
                   <div
-                    className={`ml-2 p-2 px-3 rounded-3xl max-w-lg relative min-w-[50px] ${
-                      item.sender._id === currentUserId
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100'
+                    className={`group flex items-end gap-2 px-4 pb-0.5 ${
+                      isSent ? 'justify-end' : 'justify-start'
                     }`}
-                    onMouseEnter={() => setActiveHover(item._id)}
-                    onMouseLeave={() => setActiveHover(null)}
                   >
-                    <p className="w-full">{item.message}</p>
-                    {activeHover === item._id && (
+                    {/* Avatar (received side) */}
+                    {!isSent && (
+                      <div className="w-7 h-7 shrink-0 mb-1">
+                        {showAvatar && (
+                          <UserAvatar src={message.sender.image} size="sm" />
+                        )}
+                      </div>
+                    )}
+
+                    {/* Actions for SENT — appear before the bubble */}
+                    {isSent && (
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mb-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEmojiPickerFor(
+                              emojiPickerFor === message._id
+                                ? null
+                                : message._id,
+                            );
+                          }}
+                          className="p-1.5 rounded-full hover:bg-ig-hover text-ig-muted hover:text-ig-text transition-colors"
+                        >
+                          <Smile size={15} />
+                        </button>
+                        <button
+                          onClick={() => setReplyingTo(message)}
+                          className="p-1.5 rounded-full hover:bg-ig-hover text-ig-muted hover:text-ig-text transition-colors"
+                        >
+                          <CornerUpLeft size={15} />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Bubble + reactions */}
+                    <div
+                      className={`flex flex-col relative ${isSent ? 'items-end' : 'items-start'}`}
+                    >
+                      {/* Reply quote */}
+                      {message.replyTo && (
+                        <div
+                          className={`mb-1 px-3 py-1.5 rounded-xl text-[12px] max-w-[90%] truncate border-l-2 ${
+                            isSent
+                              ? 'bg-white/20 text-white border-white/50'
+                              : 'bg-ig-bg text-ig-muted border-ig-border'
+                          }`}
+                        >
+                          <span className="font-semibold mr-1">
+                            {message.replyTo.sender?.fullName}:
+                          </span>
+                          {message.replyTo.message}
+                        </div>
+                      )}
+
+                      {/* Main bubble */}
                       <div
-                        className={`absolute top-0  bg-gray-200 p-3 rounded-lg text-xs text-gray-400 ${
-                          item.sender._id !== currentUserId
-                            ? 'right-[-128px]'
-                            : '-left-[58px]'
+                        className={`relative text-[14px] px-4 py-2.5 max-w-[65vw] break-words leading-relaxed select-text ${
+                          isSent
+                            ? 'bg-gradient-to-br from-[#3897F0] to-[#1d7de8] text-white shadow-[0_2px_8px_rgba(56,151,240,0.28)]'
+                            : 'bg-ig-hover text-ig-text shadow-[0_1px_3px_rgba(0,0,0,0.07)]'
                         }`}
+                        style={getBubbleRadius(isSent, isFirst, isLast)}
                       >
-                        <span>
-                          {dayjs().diff(dayjs(item.createdAt), 'day') > 0
-                            ? dayjs(item.createdAt).format(' HH:mm, DD:MM:YYYY')
-                            : dayjs(item.createdAt).format('HH:mm')}
-                        </span>
+                        <p className="w-full whitespace-pre-wrap">
+                          {message.message}
+                        </p>
+
+                        {/* Emoji picker popup */}
+                        {emojiPickerFor === message._id && (
+                          <EmojiPicker
+                            onSelect={(emoji) =>
+                              handleReact(message._id, emoji)
+                            }
+                            isSent={isSent}
+                          />
+                        )}
+                      </div>
+
+                      {/* Reactions display */}
+                      {msgReactions.length > 0 && (
+                        <div
+                          className={`flex items-center gap-0.5 -mt-1 z-10 bg-ig-bg rounded-full px-2 py-0.5 shadow-md border border-ig-border text-[14px] leading-none ${
+                            isSent ? 'mr-1' : 'ml-1'
+                          }`}
+                        >
+                          {msgReactions.map((e, idx) => (
+                            <span key={idx}>{e}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions for RECEIVED — appear after the bubble */}
+                    {!isSent && (
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mb-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEmojiPickerFor(
+                              emojiPickerFor === message._id
+                                ? null
+                                : message._id,
+                            );
+                          }}
+                          className="p-1.5 rounded-full hover:bg-ig-hover text-ig-muted hover:text-ig-text transition-colors"
+                        >
+                          <Smile size={15} />
+                        </button>
+                        <button
+                          onClick={() => setReplyingTo(message)}
+                          className="p-1.5 rounded-full hover:bg-ig-hover text-ig-muted hover:text-ig-text transition-colors"
+                        >
+                          <CornerUpLeft size={15} />
+                        </button>
+                        <button className="p-1.5 rounded-full hover:bg-ig-hover text-ig-muted hover:text-ig-text transition-colors">
+                          <MoreHorizontal size={15} />
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
               );
-            })}
-          </div>
-          <div ref={textEndRef} />
-        </div>
-
-        {newMessagesNotification && (
-          <div
-            className="fixed bottom-20 right-4 bg-blue-300 text-white
-          p-3 rounded-xl shadow-lg z-50"
-            onClick={() => {
-              setNewMessagesNotification(false);
-              textEndRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'end',
-              });
             }}
-          >
-            New messages received ⬇️
-          </div>
+          />
+          </>
         )}
 
-        <MessageCreation
-          userId={userId}
-          ref={textEndRef}
-          // onSendSuccess={handleSendMessageSuccess}
-        />
+        {/* New messages badge */}
+        {newMessageCount > 0 && !isAtBottom && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-[#3897F0] text-white text-[12px] font-semibold px-4 py-2 rounded-full shadow-lg hover:bg-[#1877F2] transition-colors z-10"
+          >
+            <ChevronDown size={13} />
+            {newMessageCount} tin nhắn mới
+          </button>
+        )}
       </div>
+
+      {/* ── Input ──────────────────────────────────────── */}
+      <MessageCreation
+        userId={userId}
+        replyTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
+        onSendSuccess={handleSendSuccess}
+      />
     </div>
   );
 };

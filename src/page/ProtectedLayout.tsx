@@ -1,4 +1,5 @@
 import Loading from '@components/Loading';
+import FloatingChatBubble from '@components/FloatingChatBubble';
 import SocketProvider from '@context/SocketProvider';
 import { saveUserinfo } from '@redux/slice/authSlice';
 import { useGetAuthUserQuery } from '@services/rootApi';
@@ -37,6 +38,7 @@ function Protectedlayout() {
           <Header />
         </div> */}
         <Outlet />
+        <FloatingChatBubble />
       </div>
     </SocketProvider>
   );

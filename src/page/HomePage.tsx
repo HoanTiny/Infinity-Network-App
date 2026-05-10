@@ -8,7 +8,7 @@ function HomePage() {
       <Sidebar />
 
       <main className="pl-[72px]">
-        <div className="mx-auto w-full max-w-[470px] sm:py-6">
+        <div className="mx-auto w-full max-w-[615px] sm:py-6 flex flex-col items-center">
           <StoriesRow />
           <Feed />
         </div>

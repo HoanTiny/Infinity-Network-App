@@ -30,6 +30,15 @@ export default {
         'ig-heart': 'var(--ig-heart)',
         'ig-accent': 'var(--ig-accent)',
       },
+      keyframes: {
+        'chat-bubble-in': {
+          '0%': { opacity: '0', transform: 'translateY(16px) scale(0.92)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'chat-bubble-in': 'chat-bubble-in 0.35s cubic-bezier(0.34,1.56,0.64,1) both',
+      },
       boxShadow: {
         '3xl': '0px 4px 18px 0px rgba(75, 70, 92, 0.10)',
         '4xl': '0px 2px 4px 0px rgba(165, 163, 174, 0.30)',

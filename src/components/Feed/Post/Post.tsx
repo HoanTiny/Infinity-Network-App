@@ -1,10 +1,9 @@
-import { useState } from 'react';
-import CommentSection from '@components/CommentSection';
 import PostHeader from './PostHeader';
 import PostMedia from './PostMedia';
 import PostActions from './PostActions';
 import PostFooter from './PostFooter';
 import type { PostProps } from './Post.types';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function Post({
   postId,
@@ -17,15 +16,17 @@ function Post({
   likes = [],
   comments = [],
   isLiked = false,
-  resetComment,
   onLike,
-  onComment,
 }: PostProps) {
-  const [showComments, setShowComments] = useState(false);
-  const toggleComments = () => setShowComments((v) => !v);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const openDetail = () => {
+    navigate(`/posts/${postId}`, { state: { background: location } });
+  };
 
   return (
-    <article className="bg-ig-bg border-b border-ig-border sm:border-b-0 sm:mb-10">
+    <article className="sm:rounded-xl sm:mb-6 overflow-hidden">
       <PostHeader
         authorId={authorId}
         fullName={fullName}
@@ -37,30 +38,20 @@ function Post({
 
       <PostActions
         isLiked={isLiked}
+        likesCount={likes.length}
+        commentsCount={comments.length}
         onLike={() => onLike(postId)}
-        onComment={toggleComments}
+        onComment={openDetail}
       />
 
       <PostFooter
         fullName={fullName}
         content={content}
-        likesCount={likes.length}
         commentsCount={comments.length}
         createdAt={createdAt}
-        onToggleComments={toggleComments}
+        onToggleComments={openDetail}
       />
 
-      {showComments && (
-        <div className="border-t border-ig-border">
-          <CommentSection
-            comments={comments}
-            allComments={comments}
-            postId={postId}
-            handleComment={onComment}
-            resetComment={resetComment}
-          />
-        </div>
-      )}
     </article>
   );
 }

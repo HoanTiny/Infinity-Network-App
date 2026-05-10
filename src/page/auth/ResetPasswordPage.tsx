@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Button, CircularProgress } from '@mui/material';
 import { openSnackbar } from '@redux/slice/snackbar';
 import { useResetPasswordMutation } from '@services/rootApi';
 import { useEffect } from 'react';
@@ -10,6 +9,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
 import FormField from '../../components/FormField';
 import TextInput from '../../components/FormInput/TextInput';
+import { motion } from 'framer-motion';
+import { ArrowLeft, KeyRound } from 'lucide-react';
 
 function ResetPasswordPage() {
   const dispatch = useDispatch();
@@ -34,7 +35,6 @@ function ResetPasswordPage() {
     control,
     handleSubmit,
     formState: { errors },
-    getValues,
   } = useForm({
     resolver: yupResolver(resetPasswordSchema),
   });
@@ -84,7 +84,6 @@ function ResetPasswordPage() {
     }
   }, [dispatch, isSuccess, isError, error, navigate, data]);
 
-  // Check if email is present
   useEffect(() => {
     if (!email) {
       dispatch(
@@ -98,59 +97,102 @@ function ResetPasswordPage() {
   }, [email, dispatch, navigate]);
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <div>
-        <h2 className="text-[22px]">Reset Password 🔑</h2>
-        <p className="text-[15px]">
-          Enter the code from your email and your new password.
-        </p>
+    <motion.div
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -10 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="flex flex-col gap-5 w-full"
+    >
+      {/* Icon */}
+      <div className="flex justify-center">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/10 to-pink-500/10 dark:from-violet-500/20 dark:to-pink-500/20 flex items-center justify-center border border-pink-200/50 dark:border-pink-800/30">
+          <KeyRound size={26} className="text-pink-500" strokeWidth={1.6} />
+        </div>
       </div>
+
+      {/* Heading */}
+      <div className="flex flex-col gap-1 text-center">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+          Đặt lại mật khẩu
+        </h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          Nhập mã từ email và mật khẩu mới của bạn.
+        </p>
+        {email && (
+          <span className="text-xs font-medium text-pink-500 mt-0.5">{email}</span>
+        )}
+      </div>
+
+      {/* Form */}
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
         <FormField
           name="token"
-          label="Verification Code (Token)"
+          label="Mã xác nhận"
           control={control}
           type="text"
           className="w-full"
-          placeholder="Enter the code from your email"
+          placeholder="Nhập mã từ email của bạn"
           Component={TextInput}
           error={errors.token}
         />
 
         <FormField
           name="password"
-          label="New Password"
+          label="Mật khẩu mới"
           control={control}
           type="password"
           className="w-full"
-          placeholder="********"
+          placeholder="Tối thiểu 6 ký tự"
           Component={TextInput}
           error={errors.password}
         />
 
         <FormField
           name="confirmPassword"
-          label="Confirm New Password"
+          label="Xác nhận mật khẩu"
           control={control}
           type="password"
           className="w-full"
-          placeholder="********"
+          placeholder="Nhập lại mật khẩu mới"
           Component={TextInput}
           error={errors.confirmPassword}
         />
 
-        <Button variant="contained" color="primary" type="submit">
-          {isLoading && <CircularProgress size={20} className="mr-2" />}
-          Reset Password
-        </Button>
-
-        <div className="flex justify-center">
-          <a href="/login" className="text-[#246AA3]">
-            Back to Login
-          </a>
-        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={[
+            'w-full h-12 rounded-2xl text-white font-semibold text-sm mt-1',
+            'bg-gradient-to-r from-violet-500 via-pink-500 to-orange-400',
+            'shadow-lg shadow-pink-500/25',
+            'hover:shadow-pink-500/40 hover:-translate-y-0.5',
+            'active:translate-y-0 active:shadow-md',
+            'transition-all duration-300',
+            'disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg',
+            'flex items-center justify-center gap-2',
+          ].join(' ')}
+        >
+          {isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Đang xử lý...</span>
+            </>
+          ) : (
+            'Đặt lại mật khẩu'
+          )}
+        </button>
       </form>
-    </div>
+
+      {/* Back link */}
+      <a
+        href="/login"
+        className="flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200"
+      >
+        <ArrowLeft size={15} strokeWidth={2} />
+        Quay lại đăng nhập
+      </a>
+    </motion.div>
   );
 }
 

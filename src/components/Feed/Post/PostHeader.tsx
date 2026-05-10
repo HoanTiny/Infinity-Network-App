@@ -8,32 +8,42 @@ type Props = {
   fullName: string;
   authorImage?: string;
   createdAt: string;
+  location?: string;
 };
 
-function PostHeader({ authorId, fullName, authorImage, createdAt }: Props) {
+function PostHeader({ authorId, fullName, authorImage, createdAt, location }: Props) {
   return (
     <header className="flex items-center gap-3 px-4 py-3">
       <Link to={`/user/${authorId}`} className="shrink-0">
-        <UserAvatar src={authorImage} size="sm" />
+        <div className="p-[2px] rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600">
+          <div className="p-[2px] rounded-full bg-ig-bg">
+            <UserAvatar src={authorImage} size="sm" />
+          </div>
+        </div>
       </Link>
 
-      <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-        <Link
-          to={`/user/${authorId}`}
-          className="text-[14px] font-semibold text-ig-text truncate hover:opacity-70"
-        >
-          {fullName}
-        </Link>
-        <span className="text-ig-muted text-[14px] leading-none">·</span>
-        <span className="text-ig-muted text-[12px]">
-          <TimeAgo date={createdAt} />
-        </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Link
+            to={`/user/${authorId}`}
+            className="text-[14px] font-semibold text-ig-text hover:opacity-70 leading-tight"
+          >
+            {fullName}
+          </Link>
+          <span className="text-ig-muted text-[13px] leading-tight">·</span>
+          <span className="text-ig-muted text-[13px] leading-tight">
+            <TimeAgo date={createdAt} />
+          </span>
+        </div>
+        {location && (
+          <p className="text-[12px] text-ig-muted leading-tight mt-0.5 truncate">{location}</p>
+        )}
       </div>
 
       <button
         type="button"
         aria-label="More options"
-        className="p-2 -m-2 text-ig-text hover:opacity-60"
+        className="p-2 -mr-2 text-ig-text hover:opacity-60 rounded-full hover:bg-ig-hover transition-colors"
       >
         <MoreHorizontal size={20} strokeWidth={1.75} />
       </button>

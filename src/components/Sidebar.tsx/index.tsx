@@ -53,7 +53,10 @@ function Sidebar() {
   }, [menuOpen]);
 
   const isActive = (path?: string) =>
-    !!path && (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path));
+    !!path &&
+    (path === '/'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(path));
 
   const openCreateDialog = () => {
     dispatch(
@@ -63,7 +66,7 @@ function Sidebar() {
         actions: 'Post',
         maxWidth: 'md',
         fullWidth: true,
-      })
+      }),
     );
   };
 
@@ -83,33 +86,39 @@ function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-[72px] flex flex-col items-center py-4 bg-ig-bg border-r border-ig-border z-40">
+    <aside className="fixed left-0 top-0 h-screen w-[72px] flex flex-col items-center py-4 bg-ig-bg border-ig-border z-40">
       <Link to="/" className="py-3" aria-label="Trang chủ">
         <img src="/img/Logo2.svg" alt="logo" className="w-7 h-7" />
       </Link>
 
-      <nav className="flex-1 flex flex-col items-center gap-2 mt-6 w-full">
+      <nav className="flex-1 flex justify-center flex-col items-center gap-2 mt-6 w-full">
         {navItems.map((item) => {
           const active = isActive(item.path);
           const Icon = item.icon;
           const inner = (
             <span className="relative inline-flex">
               <Icon
-                size={26}
+                size={22}
                 strokeWidth={active ? 2.25 : 1.75}
                 className="text-ig-text"
               />
               {item.badge ? (
-                <span className="absolute -top-1.5 -right-2 bg-ig-heart text-white text-[10px] font-semibold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none ring-2 ring-ig-bg">
+                <span className="absolute -top-1.5 -right-2 bg-ig-heart text-white text-[8px] font-semibold rounded-full min-w-[14px] h-[14px] px-1 flex items-center justify-center leading-none ring-2 ring-ig-bg">
                   {item.badge > 99 ? '99+' : item.badge}
                 </span>
               ) : null}
             </span>
           );
 
-          const className = `p-3 rounded-lg transition-colors hover:bg-ig-hover ${
+          const className = `group relative p-3 rounded-lg transition-colors hover:bg-ig-hover ${
             active ? 'bg-ig-hover' : ''
           }`;
+
+          const tooltip = (
+            <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-ig-bg border border-ig-border px-3 py-1.5 text-[13px] font-medium text-ig-text shadow-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out z-50">
+              {item.label}
+            </span>
+          );
 
           return item.path ? (
             <Link
@@ -117,9 +126,9 @@ function Sidebar() {
               to={item.path}
               className={className}
               aria-label={item.label}
-              title={item.label}
             >
               {inner}
+              {tooltip}
             </Link>
           ) : (
             <button
@@ -128,36 +137,43 @@ function Sidebar() {
               onClick={item.onClick}
               className={className}
               aria-label={item.label}
-              title={item.label}
             >
               {inner}
+              {tooltip}
             </button>
           );
         })}
 
-        <Link
-          to={`/user/${userInfo?._id}`}
-          className={`p-2 mt-1 rounded-full transition-colors hover:bg-ig-hover ${
-            isActive(`/user/${userInfo?._id}`)
-              ? 'ring-2 ring-ig-text ring-offset-2 ring-offset-ig-bg'
-              : ''
-          }`}
-          aria-label="Trang cá nhân"
-          title="Trang cá nhân"
-        >
-          <UserAvatar isMyAvatar size="sm" />
-        </Link>
+        <div className="group relative p-2 mt-1">
+          <Link
+            to={`/user/${userInfo?._id}`}
+            className={`block rounded-full transition-colors hover:bg-ig-hover ${
+              isActive(`/user/${userInfo?._id}`)
+                ? 'ring-2 ring-ig-text ring-offset-2 ring-offset-ig-bg'
+                : ''
+            }`}
+            aria-label="Trang cá nhân"
+          >
+            <UserAvatar isMyAvatar size="sm" />
+          </Link>
+          <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-ig-bg border border-ig-border px-3 py-1.5 text-[13px] font-medium text-ig-text shadow-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out z-50">
+            Trang cá nhân
+          </span>
+        </div>
       </nav>
 
       <div className="relative pb-2" ref={menuRef}>
         <button
           type="button"
-          className="p-3 rounded-lg transition-colors hover:bg-ig-hover"
+          className="group relative p-3 rounded-lg transition-colors hover:bg-ig-hover"
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Tùy chọn khác"
           aria-expanded={menuOpen}
         >
           <Menu size={26} strokeWidth={1.75} className="text-ig-text" />
+          <span className="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-ig-bg border border-ig-border px-3 py-1.5 text-[13px] font-medium text-ig-text shadow-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 ease-out z-50">
+            Xem thêm
+          </span>
         </button>
 
         {menuOpen && (
