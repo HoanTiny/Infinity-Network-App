@@ -26,7 +26,7 @@ function Post({
   };
 
   return (
-    <article className="sm:rounded-xl sm:mb-6 overflow-hidden">
+    <article className="bg-ig-bg  rounded-xl overflow-hidden">
       <PostHeader
         authorId={authorId}
         fullName={fullName}

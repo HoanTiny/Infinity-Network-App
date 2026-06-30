@@ -112,6 +112,8 @@ import { Navigate } from 'react-router-dom';
 import Account from '@page/settings/Account';
 import Messages from '@page/messages';
 import ChatDetail from '@page/messages/ChatDetail';
+import FriendRequestsPage from '@page/friends/FriendRequestsPage';
+import PhotosTab from '@page/profile/PhotosTab';
 
 // Xóa createBrowserRouter, chuyển sang export routes array để dùng với <Routes> trong App.tsx
 const routes = [
@@ -147,7 +149,7 @@ const routes = [
               },
               {
                 path: 'photos',
-                element: <div>Photos</div>,
+                element: <PhotosTab />,
               },
             ],
           },
@@ -163,6 +165,10 @@ const routes = [
                 element: <Account />,
               },
             ],
+          },
+          {
+            path: '/friends/requests',
+            element: <FriendRequestsPage />,
           },
           {
             path: 'messages',

@@ -348,7 +348,7 @@ const ChatDetail = () => {
 
                   {/* Message row with group hover */}
                   <div
-                    className={`group flex items-end gap-2 px-4 pb-0.5 ${
+                    className={`group flex items-end gap-3 px-4 pb-0.5 ${
                       isSent ? 'justify-end' : 'justify-start'
                     }`}
                   >

@@ -1,8 +1,12 @@
 import UserAvatar from '@components/UserAvatar';
+import NotificationsPanel from '@components/NotificationsPanel.tsx';
 import { useUserInfo } from '@hooks/getUserinfo';
 import { useTheme } from '@hooks/useTheme';
 import { logOut } from '@redux/slice/authSlice';
 import { openDialog } from '@redux/slice/dialogSlice';
+import { useGetPendingFriendsRequestQuery } from '@services/friendApi';
+import { useGetConversationsQuery } from '@services/messagesApi';
+import { useGetNotificationsQuery } from '@services/notificationApi';
 import {
   Compass,
   Film,
@@ -18,6 +22,7 @@ import {
   Settings,
   SquarePlus,
   Sun,
+  Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -37,8 +42,29 @@ function Sidebar() {
   const dispatch = useDispatch();
   const userInfo = useUserInfo();
   const { theme, setTheme } = useTheme();
+  const { data: notificationsData } = useGetNotificationsQuery() as {
+    data?: { notifications?: any[] };
+  };
+  const { data: conversationsData } = useGetConversationsQuery({});
+  const { data: pendingFriendsData } = useGetPendingFriendsRequestQuery();
+
+  const notifications = notificationsData?.notifications ?? [];
+  const unreadNotificationsCount = notifications.filter(
+    (note) => note?.seen === false && note?.author?._id !== userInfo?._id,
+  ).length;
+  const unreadMessagesCount = Array.isArray(conversationsData)
+    ? conversationsData.filter(
+        (conversation: any) =>
+          conversation?.seen === false &&
+          conversation?.sender?._id !== userInfo?._id,
+      ).length
+    : 0;
+  const pendingFriendsCount = Array.isArray(pendingFriendsData)
+    ? pendingFriendsData.length
+    : 0;
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,8 +101,27 @@ function Sidebar() {
     { icon: Search, label: 'Tìm kiếm', path: '/search/users' },
     { icon: Compass, label: 'Khám phá', path: '/explore' },
     { icon: Film, label: 'Reels', path: '/reels' },
-    { icon: MessageCircle, label: 'Tin nhắn', path: '/messages', badge: 3 },
-    { icon: Heart, label: 'Thông báo', path: '/notifications', badge: 10 },
+    {
+      icon: MessageCircle,
+      label: 'Tin nhắn',
+      path: '/messages',
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
+    },
+    // {
+    //   icon: Users,
+    //   label: 'Lời mời kết bạn',
+    //   path: '/friends/requests',
+    //   badge: pendingFriendsCount > 0 ? pendingFriendsCount : undefined,
+    // },
+    {
+      icon: Heart,
+      label: 'Thông báo',
+      badge:
+        unreadNotificationsCount > 0
+          ? unreadNotificationsCount
+          : undefined,
+      onClick: () => setNotifOpen(true),
+    },
     { icon: SquarePlus, label: 'Tạo bài viết', onClick: openCreateDialog },
   ];
 
@@ -86,6 +131,8 @@ function Sidebar() {
   };
 
   return (
+    <>
+    <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
     <aside className="fixed left-0 top-0 h-screen w-[72px] flex flex-col items-center py-4 bg-ig-bg border-ig-border z-40">
       <Link to="/" className="py-3" aria-label="Trang chủ">
         <img src="/img/Logo2.svg" alt="logo" className="w-7 h-7" />
@@ -206,6 +253,7 @@ function Sidebar() {
         )}
       </div>
     </aside>
+    </>
   );
 }
 

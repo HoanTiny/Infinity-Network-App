@@ -100,9 +100,12 @@ function FriendRequest() {
             Friend Requests
           </h3>
         </div>
-        <div className="text-[#0095f6] text-sm font-semibold hover:text-[#0074cc] transition-colors cursor-pointer">
+        <Link
+          to="/friends/requests"
+          className="text-[#0095f6] text-sm font-semibold hover:text-[#0074cc] transition-colors"
+        >
           See All
-        </div>
+        </Link>
       </div>
       <div className="card__content space-y-3">
         {isFetching ? (

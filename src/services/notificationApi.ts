@@ -20,6 +20,33 @@ export const notificationsApi = rootApi.injectEndpoints({
         },
       }),
 
+      markNotificationAsRead: builder.mutation<unknown, string>({
+        query: (notificationId) => ({
+          url: '/notifications/seen',
+          method: 'PATCH',
+          body: { notificationId },
+        }),
+        async onQueryStarted(notificationId, { dispatch, queryFulfilled }) {
+          const patch = dispatch(
+            notificationsApi.util.updateQueryData(
+              'getNotifications',
+              undefined,
+              (draft: any) => {
+                const target = draft?.notifications?.find(
+                  (n: any) => n._id === notificationId,
+                );
+                if (target) target.seen = true;
+              },
+            ),
+          );
+          try {
+            await queryFulfilled;
+          } catch {
+            patch.undo();
+          }
+        },
+      }),
+
       createNotification: builder.mutation({
         query: ({
           userId,
@@ -50,5 +77,8 @@ export const notificationsApi = rootApi.injectEndpoints({
   },
 });
 
-export const { useGetNotificationsQuery, useCreateNotificationMutation } =
-  notificationsApi;
+export const {
+  useGetNotificationsQuery,
+  useCreateNotificationMutation,
+  useMarkNotificationAsReadMutation,
+} = notificationsApi;

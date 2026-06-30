@@ -52,7 +52,7 @@ function Feed({ userId }: Props = {}) {
   if (!hasPosts) return null;
 
   return (
-    <div className="max-w-[412px] ">
+    <div className="w-[460px] flex flex-col gap-4 mt-4">
       {posts.map((post: any) => {
         const isLiked = post.likes.some(
           (l: PostLike) => l.author?._id === currentUserId,

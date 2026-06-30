@@ -1,12 +1,14 @@
 import ListConverstation from './ListConverstation';
 import { Outlet, useParams } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
+import Sidebar from '@components/Sidebar.tsx';
 
 const Messages = () => {
   const { userId } = useParams<{ userId: string }>();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-ig-bg">
+    <div className="flex h-screen overflow-hidden bg-ig-bg sm:pl-[72px]">
+      <Sidebar />
       {/* Conversation list — hidden on mobile when a chat is open */}
       <div
         className={`${

@@ -63,9 +63,11 @@ body {
 @layer components {
   /* Instagram-style card */
   .card {
-    @apply bg-white rounded-xl;
+    @apply rounded-xl p-4;
+    background: var(--ig-bg);
+    color: var(--ig-text);
     box-shadow: var(--shadow-md);
-    border: 1px solid var(--ig-border-color);
+    border: 1px solid var(--ig-border);
   }
 
   /* Story ring gradient */
